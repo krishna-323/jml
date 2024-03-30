@@ -316,78 +316,23 @@ class _AddInwardState extends State<AddInward> {
                                           children: [
                                             Row(
                                               children: [
-                                                // Flexible(
-                                                //   child: Padding(
-                                                //     padding: const EdgeInsets.all(8),
-                                                //     child: Column(
-                                                //       crossAxisAlignment: CrossAxisAlignment.start,
-                                                //       children: [
-                                                //         const SizedBox(height: 15,),
-                                                //         const Text("Gate Inward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                //         const SizedBox(height: 6,),
-                                                //         TextFormField(
-                                                //           style: const TextStyle(fontSize: 11),
-                                                //           autofocus: true,
-                                                //           controller: gateInwardNoController,
-                                                //           decoration: customerFieldDecoration(hintText: '',controller: gateInwardNoController),
-                                                //           onChanged: (value){
-                                                //
-                                                //           },
-                                                //         ),
-                                                //       ],
-                                                //     ),
-                                                //   ),
-                                                // ),
                                                 Flexible(
                                                   child: Padding(
                                                     padding: const EdgeInsets.all(8),
                                                     child: Column(
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
-                                                        const SizedBox(height: 10,),
-                                                        const Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                        const SizedBox(height: 15,),
+                                                        const Text("Gate Inward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                                                         const SizedBox(height: 6,),
-                                                        SizedBox(
-                                                          height: 30,
-                                                          child: TextFormField(
-                                                            style: const TextStyle(fontSize: 11),
-                                                            readOnly: true,
-                                                            controller: supplierNameController,
-                                                            decoration:  const InputDecoration(
-                                                              hintText: " Select Supplier Name",
-                                                              hintStyle: TextStyle(fontSize: 11,),
-                                                              border: OutlineInputBorder(
-                                                                  borderSide: BorderSide(color:  Colors.blue)
-                                                              ),
-                                                              contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
-                                                              suffixIcon: Icon(
-                                                                Icons.arrow_drop_down_outlined,
-                                                                color: Colors.blue,size: 16,
-                                                              ),
-                                                              enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
-                                                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-                                                            ),
-                                                            onChanged: (value){
+                                                        TextFormField(
+                                                          style: const TextStyle(fontSize: 11),
+                                                          // autofocus: true,
+                                                          controller: gateInwardNoController,
+                                                          decoration: customerFieldDecoration(hintText: '',controller: gateInwardNoController),
+                                                          onChanged: (value){
 
-                                                            },
-                                                            onTap: () {
-                                                              showDialog(
-                                                                context: context,
-                                                                builder: (context) => _showSupplierNameDialog(),
-                                                              ).then((value) {
-                                                                setState(() {
-                                                                  loading = false;
-                                                                  supplierNameController.text = value["name"];
-                                                                  supplierCodeController.text = value["code"];
-                                                                  print('-------- supplier name then ----------');
-                                                                  print(supplierNameController.text);
-                                                                  print(supplierCodeController.text);
-                                                                  print(poNoList);
-                                                                });
-                                                                getPOData(value["code"]);
-                                                              });
-                                                            },
-                                                          ),
+                                                          },
                                                         ),
                                                       ],
                                                     ),
@@ -460,7 +405,7 @@ class _AddInwardState extends State<AddInward> {
                                                         const SizedBox(height: 6,),
                                                         TextFormField(
                                                           style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
+                                                          // autofocus: true,
                                                           controller: plantController,
                                                           decoration: customerFieldDecoration(hintText: '',controller: plantController),
                                                           onChanged: (value){
@@ -483,7 +428,7 @@ class _AddInwardState extends State<AddInward> {
                                                         const SizedBox(height: 6,),
                                                         TextFormField(
                                                           style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
+                                                          // autofocus: true,
                                                           controller: vehicleNoController,
                                                           decoration: customerFieldDecoration(hintText: '',controller: vehicleNoController),
                                                           onChanged: (value){
@@ -506,7 +451,7 @@ class _AddInwardState extends State<AddInward> {
                                                         const SizedBox(height: 6,),
                                                         TextFormField(
                                                           style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
+                                                          // autofocus: true,
                                                           controller: vehicleInTimeController,
                                                           decoration: customerFieldDecoration(hintText: '',controller: vehicleInTimeController),
                                                           onChanged: (value){
@@ -607,61 +552,114 @@ class _AddInwardState extends State<AddInward> {
                                                   ),
                                                 ),
                                                 const SizedBox(width: 80,),
-                                                // Flexible(
-                                                //   child: Padding(
-                                                //     padding: const EdgeInsets.all(8),
-                                                //     child: Column(
-                                                //       crossAxisAlignment: CrossAxisAlignment.start,
-                                                //       children: [
-                                                //         const SizedBox(height: 10,),
-                                                //         const Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                //         const SizedBox(height: 6,),
-                                                //         SizedBox(
-                                                //           height: 30,
-                                                //           child: TextFormField(
-                                                //             style: const TextStyle(fontSize: 11),
-                                                //             readOnly: true,
-                                                //             controller: supplierNameController,
-                                                //             decoration:  const InputDecoration(
-                                                //               hintText: " Select Supplier Name",
-                                                //               hintStyle: TextStyle(fontSize: 11,),
-                                                //               border: OutlineInputBorder(
-                                                //                   borderSide: BorderSide(color:  Colors.blue)
-                                                //               ),
-                                                //               contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
-                                                //               suffixIcon: Icon(
-                                                //                 Icons.arrow_drop_down_outlined,
-                                                //                 color: Colors.blue,size: 16,
-                                                //               ),
-                                                //               enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
-                                                //               focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-                                                //             ),
-                                                //             onChanged: (value){
-                                                //
-                                                //             },
-                                                //             onTap: () {
-                                                //               showDialog(
-                                                //                 context: context,
-                                                //                 builder: (context) => _showSupplierNameDialog(),
-                                                //               ).then((value) {
-                                                //                 setState(() {
-                                                //                   loading = false;
-                                                //                   supplierNameController.text = value["name"];
-                                                //                   supplierCodeController.text = value["code"];
-                                                //                   print('-------- supplier name then ----------');
-                                                //                   print(supplierNameController.text);
-                                                //                   print(supplierCodeController.text);
-                                                //                   print(poNoList);
-                                                //                 });
-                                                //                 getPOData(value["code"]);
-                                                //               });
-                                                //             },
-                                                //           ),
-                                                //         ),
-                                                //       ],
-                                                //     ),
-                                                //   ),
-                                                // ),
+                                                Flexible(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        const SizedBox(height: 10,),
+                                                        const Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                        const SizedBox(height: 6,),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          child: TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            readOnly: true,
+                                                            autofocus: true,
+                                                            controller: supplierNameController,
+                                                            decoration:  const InputDecoration(
+                                                              hintText: " Select Supplier Name",
+                                                              hintStyle: TextStyle(fontSize: 11,),
+                                                              border: OutlineInputBorder(
+                                                                  borderSide: BorderSide(color:  Colors.blue)
+                                                              ),
+                                                              contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
+                                                              suffixIcon: Icon(
+                                                                Icons.arrow_drop_down_outlined,
+                                                                color: Colors.blue,size: 16,
+                                                              ),
+                                                              enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
+                                                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                                            ),
+                                                            onChanged: (value){
+
+                                                            },
+                                                            onTap: () {
+                                                              showDialog(
+                                                                context: context,
+                                                                builder: (context) => _showSupplierNameDialog(),
+                                                              ).then((value) {
+                                                                setState(() {
+                                                                  loading = false;
+                                                                  supplierNameController.text = value["name"];
+                                                                  supplierCodeController.text = value["code"];
+                                                                  print('-------- supplier name then ----------');
+                                                                  print(supplierNameController.text);
+                                                                  print(supplierCodeController.text);
+                                                                  print(poNoList);
+                                                                });
+                                                                getPOData(value["code"]);
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 80,),
+                                                Flexible(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        const Text("Invoice No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                        const SizedBox(height: 6,),
+                                                        TextFormField(
+                                                          style: const TextStyle(fontSize: 11),
+                                                          autofocus: true,
+                                                          controller: invoiceNoController,
+                                                          decoration: customerFieldDecoration(hintText: '',controller: invoiceNoController),
+                                                          onChanged: (value){
+
+                                                          },
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        const Text("Invoice Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                        const SizedBox(height: 6,),
+                                                        TextFormField(
+                                                          style: const TextStyle(fontSize: 11),
+                                                          autofocus: true,
+                                                          controller: invoiceDateController,
+                                                          decoration: customerFieldDecoration(hintText: '',controller: invoiceDateController),
+                                                          onChanged: (value){
+
+                                                          },
+                                                          onTap: () {
+                                                            selectInvoiceDate(context);
+                                                          },
+                                                        ),
+                                                        const SizedBox(height: 10,),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 80,),
                                                 Flexible(
                                                   child: Padding(
                                                     padding: const EdgeInsets.all(8),
@@ -731,59 +729,6 @@ class _AddInwardState extends State<AddInward> {
                                                     ),
                                                   ),
                                                 ),
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const Text("Invoice Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
-                                                          controller: invoiceDateController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: invoiceDateController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                          onTap: () {
-                                                            selectInvoiceDate(context);
-                                                          },
-                                                        ),
-                                                        const SizedBox(height: 10,),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const Text("Invoice No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
-                                                          controller: invoiceNoController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: invoiceNoController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Expanded(child: Container(),)
                                               ],
                                             ),
                                           ],
