@@ -47,6 +47,7 @@ class _AddInwardState extends State<AddInward> {
   final receivedController = TextEditingController();
   final remarksController = TextEditingController();
   final searchSupplierCodeController = TextEditingController();
+  final searchSupplierNameController = TextEditingController();
   final searchPONoController = TextEditingController();
   late double drawerWidth;
 
@@ -158,6 +159,7 @@ class _AddInwardState extends State<AddInward> {
       suppliers = data.map((entry){
         return {
           "Supplier":entry["Supplier"],
+          "SupplierName": entry["SupplierName"],
         };
       }).toList();
     }
@@ -205,25 +207,30 @@ class _AddInwardState extends State<AddInward> {
                           color: Colors.blue,
                           onPressed: () {
                             Map savedInward = {
-                              "gateInwardNo": gateInwardNoController.text,
-                              "entryDate": entryDateController.text,
-                              "entryTime": entryTimeController.text,
-                              "plant": plantController.text,
-                              "vehicleNumber": vehicleNoController.text,
-                              "vehicleInTime": vehicleInTimeController.text,
-                              "supplierCode": supplierCodeController.text,
-                              "supplierName": supplierNameController.text,
-                              "purchaseOrderNo": purchaseOrderController.text,
-                              "purchaseOrderType": poTypeController.text,
-                              "invoiceNo": invoiceNoController.text,
-                              "invoiceDate": invoiceDateController.text,
-                              "entredBy": enteredByController.text,
-                              "remarks": remarksController.text,
-                              "canceledBy": canceledController.text,
-                              "receivedBy": receivedController.text
+                              "GateInwardNo": gateInwardNoController.text,
+                              // "EntryDate": entryDateController.text,
+                              // "EntryTime": entryTimeController.text,
+                              "EntryDate": null,
+                              "EntryTime": "PT00H00M00S",
+                              "Plant": plantController.text,
+                              "VehicleNumber": vehicleNoController.text,
+                              // "VehicleIntime": vehicleInTimeController.text,
+                              "VehicleIntime": "PT00H00M00S",
+                              "SupplierCode": supplierCodeController.text,
+                              "SupplierName": supplierNameController.text,
+                              "PurchaseOrderNo": purchaseOrderController.text,
+                              // "PurchaseOrderType": poTypeController.text,
+                              "InvoiceNo": invoiceNoController.text,
+                              // "InvoiceDate": invoiceDateController.text,
+                              "InvoiceDate": null,
+                              "EnteredBy": enteredByController.text,
+                              "Remarks": remarksController.text,
+                              // "CanceledBy": canceledController.text,
+                              "ReceivedBy": receivedController.text
                             };
                             print('--------- saved inward ----------');
                             print(savedInward);
+                            postInwardApi(savedInward);
                         },child: const Text("Save",style: TextStyle(color: Colors.white)),),
                       )
                     ],
@@ -527,14 +534,47 @@ class _AddInwardState extends State<AddInward> {
                                                         const SizedBox(height: 10,),
                                                         const Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                                                         const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
-                                                          controller: supplierNameController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: supplierNameController),
-                                                          onChanged: (value){
+                                                        SizedBox(
+                                                          height: 30,
+                                                          child: TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            readOnly: true,
+                                                            controller: supplierNameController,
+                                                            decoration:  const InputDecoration(
+                                                              hintText: " Select Supplier Name",
+                                                              hintStyle: TextStyle(fontSize: 11,),
+                                                              border: OutlineInputBorder(
+                                                                  borderSide: BorderSide(color:  Colors.blue)
+                                                              ),
+                                                              contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
+                                                              suffixIcon: Icon(
+                                                                Icons.arrow_drop_down_outlined,
+                                                                color: Colors.blue,size: 16,
+                                                              ),
+                                                              enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
+                                                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                                            ),
+                                                            onChanged: (value){
 
-                                                          },
+                                                            },
+                                                            onTap: () {
+                                                              showDialog(
+                                                                context: context,
+                                                                builder: (context) => _showSupplierNameDialog(),
+                                                              ).then((value) {
+                                                                setState(() {
+                                                                  loading = false;
+                                                                  supplierNameController.text = value["name"];
+                                                                  supplierCodeController.text = value["code"];
+                                                                  print('-------- supplier name then ----------');
+                                                                  print(supplierNameController.text);
+                                                                  print(supplierCodeController.text);
+                                                                  print(poNoList);
+                                                                });
+                                                                getPOData(value["code"]);
+                                                              });
+                                                            },
+                                                          ),
                                                         ),
                                                       ],
                                                     ),
@@ -894,6 +934,8 @@ class _AddInwardState extends State<AddInward> {
   Future<List<dynamic>?> getPOData(String supplierCode) async {
     String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/PurchaseOrder/PurchaseOrderScheduleLine?filter=OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA' and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder";
     String authToken = "Basic ${base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'))}";
+    print('------- get po URL -------');
+    print(url);
     try {
       final response = await http.get(
         Uri.parse(url),
@@ -905,12 +947,20 @@ class _AddInwardState extends State<AddInward> {
           if(mounted){
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No PO Number !')));
           }
+          setState(() {
+            purchaseOrderController.clear();
+            poTypeController.clear();
+            purchaseOrders = [];
+            poNoList = [];
+          });
         }
         else if (tempData != null &&
             tempData.containsKey('value') &&
             tempData['value'] != null) {
           purchaseOrders = tempData['value'];
           poNoList = purchaseOrders.map((order) => order['_PurchaseOrder']['PurchaseOrder']).toSet().toList();
+          print('------- get po data ----------');
+          print(poNoList);
           return purchaseOrders;
         } else {
           print('Error: Unable to find results in response body');
@@ -926,12 +976,31 @@ class _AddInwardState extends State<AddInward> {
     }
   }
 
+  Future postInwardApi(Map tempData) async{
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_post/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
+    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
+    print('----------- post url ----------');
+    print(url);
+    final response = await http.post(
+        Uri.parse(url),
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': authToken,
+      },
+      body:  json.encode(tempData)
+    );
+    if(response.statusCode == 201){
+      print('-------- post response ---------');
+      print(response.body);
+    }
+  }
+
 
 
 
   _showSupplierDialog(){
     return AlertDialog(
-      title: const Text("Select Supplier"),
+      title: const Text("Select Supplier Code"),
       content: StatefulBuilder(
           builder: (context, setState) {
             return SizedBox(
@@ -965,6 +1034,10 @@ class _AddInwardState extends State<AddInward> {
                       return InkWell(
                         onTap: () {
                           Navigator.pop(context, supplierCodeList[index]["Supplier"].toString());
+                          print('------- supplier on tap --------');
+                          print(supplierCodeList[index]["SupplierName"]);
+                          print(poNoList);
+                          supplierNameController.text = supplierCodeList[index]["SupplierName"];
                         },
                         child: ListTile(
                           title: Text(supplierCodeList[index]["Supplier"].toString()),
@@ -977,6 +1050,67 @@ class _AddInwardState extends State<AddInward> {
             );
           },
       ),
+    );
+  }
+
+  _showSupplierNameDialog(){
+    return AlertDialog(
+      title: const Text("Select Supplier Name"),
+      content: StatefulBuilder(
+        builder: (context, setState) {
+        return SizedBox(
+          height: 500,
+          child: Column(
+            children: [
+              Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: searchSupplierNameController,
+                      decoration: const InputDecoration(labelText: "Search Supplier Name"),
+                      onChanged: (value) {
+                        setState((){
+                          if(value.isEmpty || value == ""){
+                            supplierCodeList = [];
+                          }
+                          filterSuppliersName(value);
+                        });
+                      },
+                    ),
+                    )
+              ),
+              SizedBox(
+                width: 500,
+                height: 400,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: supplierCodeList.length,
+                  itemBuilder: (context, index) {
+                  return InkWell(
+                    onTap: () {
+                      Navigator.pop(
+                          context,
+                          {
+                            "name": supplierCodeList[index]["SupplierName"].toString(),
+                            "code": supplierCodeList[index]["Supplier"].toString(),
+                          }
+                      );
+                      print('------- supplier  name on tap --------');
+                      print(supplierCodeList[index]["SupplierName"]);
+                      print(supplierCodeList[index]["Supplier"]);
+                      print(poNoList);
+                      supplierCodeController.text = supplierCodeList[index]["Supplier"];
+                    },
+                    child: ListTile(
+                      title: Text(supplierCodeList[index]["SupplierName"].toString()),
+                    ),
+                  );
+                },),
+              ),
+            ],
+          ),
+        );
+      },),
     );
   }
 
@@ -1042,6 +1176,15 @@ class _AddInwardState extends State<AddInward> {
     setState(() {
       supplierCodeList = suppliers.where((supplier) {
         final code = supplier["Supplier"].toString().toLowerCase();
+        return code.contains(value.toLowerCase());
+      }).toList();
+    });
+  }
+
+  void filterSuppliersName(String value){
+    setState(() {
+      supplierCodeList = suppliers.where((supplier) {
+        final code = supplier["SupplierName"].toString().toLowerCase();
         return code.contains(value.toLowerCase());
       }).toList();
     });
