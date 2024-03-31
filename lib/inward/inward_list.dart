@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:adaptive_scrollbar/adaptive_scrollbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -28,109 +30,117 @@ class _InwardListState extends State<InwardList> {
   final _horizontalScrollController = ScrollController();
   final _verticalScrollController = ScrollController();
 
-  final searchVehicleNo = TextEditingController();
-  final searchVehicleInTime = TextEditingController();
-  final searchInvoiceNo = TextEditingController();
-  final searchInvoiceDate = TextEditingController();
+  final searchGateInNo = TextEditingController();
+  final searchPONo = TextEditingController();
   final searchEntryDate = TextEditingController();
-  final searchEntryTime = TextEditingController();
+  final searchCancel = TextEditingController();
 
 
   bool loading = false;
-  List inwardList = [
-    {
-      "gateInwardNo": "GI123",
-      "entryDate": "26-03-2024",
-      "entryTime": "09:00 AM",
-      "plant": "Plant A",
-      "vehicleNumber": "ABC123",
-      "vehicleInTime": "08:30 AM",
-      "supplierCode": "S123",
-      "supplierName": "Supplier X",
-      "purchaseOrderNo": "PO456",
-      "purchaseOrderType": "Type A",
-      "invoiceNo": "INV789",
-      "invoiceDate": "27-03-2024",
-      "entredBy": "User123",
-      "remarks": "Sample remarks",
-      "canceledBy": "yes",
-      "receivedBy": "Receiver123"
-    },
-    {
-      "gateInwardNo": "GI456",
-      "entryDate": "26-03-2024",
-      "entryTime": "10:30 AM",
-      "plant": "Plant B",
-      "vehicleNumber": "XYZ456",
-      "vehicleInTime": "10:00 AM",
-      "supplierCode": "S456",
-      "supplierName": "Supplier Y",
-      "purchaseOrderNo": "PO789",
-      "purchaseOrderType": "Type B",
-      "invoiceNo": "INV101",
-      "invoiceDate": "25-03-2024",
-      "entredBy": "User456",
-      "remarks": "Another sample remark",
-      "canceledBy": "no",
-      "receivedBy": "Receiver789"
-    },
-    {
-      "gateInwardNo": "GI789",
-      "entryDate": "28-03-2024",
-      "entryTime": "11:45 AM",
-      "plant": "Plant C",
-      "vehicleNumber": "DEF789",
-      "vehicleInTime": "11:15 AM",
-      "supplierCode": "S789",
-      "supplierName": "Supplier Z",
-      "purchaseOrderNo": "PO123",
-      "purchaseOrderType": "Type C",
-      "invoiceNo": "INV112",
-      "invoiceDate": "27-03-2024",
-      "entredBy": "User789",
-      "remarks": "Additional remarks",
-      "canceledBy": "yes",
-      "receivedBy": "ReceiverABC"
-    },
-    {
-      "gateInwardNo": "GI101",
-      "entryDate": "29-03-2024",
-      "entryTime": "01:30 PM",
-      "plant": "Plant D",
-      "vehicleNumber": "GHI101",
-      "vehicleInTime": "01:00 PM",
-      "supplierCode": "S101",
-      "supplierName": "Supplier W",
-      "purchaseOrderNo": "PO234",
-      "purchaseOrderType": "Type D",
-      "invoiceNo": "INV345",
-      "invoiceDate": "28-03-2024",
-      "entredBy": "User101",
-      "remarks": "More remarks here",
-      "canceledBy": "no",
-      "receivedBy": "ReceiverDEF"
-    },
-  ];
+  List inwardList = [];
   List filteredList = [];
   int startVal=0;
   late double drawerWidth;
 
+  Future getInwardList()async{
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
+    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
+
+    try{
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': authToken,
+        },
+      );
+
+      if(response.statusCode == 200){
+        loading = true;
+        Map tempData = jsonDecode(response.body);
+        List results = tempData["d"]["results"];
+        inwardList.clear();
+
+        for(var result in results){
+          Map inwardData = {
+            'GateInwardNo': result['GateInwardNo'],
+            'EntryTime': formatTime(result['EntryTime']),
+            'EntryDate': result['EntryDate'],
+            'SupplierName': result['SupplierName'],
+            'SupplierCode': result['SupplierCode'],
+            'PurchaseOrderNo': result['PurchaseOrderNo'],
+            'EnteredBy': result['EnteredBy'],
+            'Plant': result['Plant'],
+            'VehicleNumber': result['VehicleNumber'],
+            'VehicleIntime': formatTime(result['VehicleIntime']),
+            'InvoiceNo': result['InvoiceNo'],
+            'InvoiceDate': result['InvoiceDate'],
+            // 'ReceivedBy': result['ReceivedBy'],
+            'Cancelled': result['Cancelled'],
+            'Remarks': result['Remarks'],
+          };
+          setState(() {
+            inwardList.add(inwardData);
+            loading = false;
+          });
+        }
+      }
+    }catch(e){}
+  }
+  String formatTime(String timeString) {
+    try {
+      String timeWithoutPT = timeString.substring(2);
+      int hours = int.parse(timeWithoutPT.substring(0, 2));
+      int minutes = int.parse(timeWithoutPT.substring(3, 5));
+      String meridian = 'AM'; 
+      if (hours >= 12) {
+        if (hours > 12) {
+          hours -= 12;
+        }
+        meridian = 'PM';
+      }
+
+      String formattedTime = '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')} $meridian';
+
+      return formattedTime;
+    } catch (e) {
+      print('Error formatting time: $e');
+      return '';
+    }
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      int milliseconds = int.parse(dateString.substring(6, dateString.length - 2));
+      DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+      String formattedDate = DateFormat('dd-MM-yyyy').format(dateTime);
+      return formattedDate;
+    } catch (e) {
+      print('Error formatting date: $e');
+      return '';
+    }
+  }
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     drawerWidth = 60.0;
-    if(filteredList.isEmpty){
-      if(inwardList.length > 15){
-        for(int i=0; i<startVal+15; i++){
-          filteredList.add(inwardList[i]);
+
+    getInwardList().then((value) {
+      if(filteredList.isEmpty){
+        if(inwardList.length > 1000){
+          for(int i=0; i<startVal + 1000; i++){
+            filteredList.add(inwardList[i]);
+          }
+        } else{
+          for(int i=0; i< inwardList.length; i++){
+            filteredList.add(inwardList[i]);
+          }
         }
-      } else{
-        for(int i=0; i<inwardList.length; i++){
-          filteredList.add(inwardList[i]);
-        }
+        setState(() {
+          loading = false;
+        });
       }
-    }
+    });
   }
   @override
   Widget build(BuildContext context) {
@@ -244,15 +254,15 @@ class _InwardListState extends State<InwardList> {
                                               width: 150,
                                              child: TextFormField(
                                                style: const TextStyle(fontSize: 11),
-                                               controller: searchVehicleNo,
-                                               decoration: searchVehicleNoDecoration(hintText: "Search Vehicle No"),
+                                               controller: searchGateInNo,
+                                               decoration: searchGateInNoDecoration(hintText: "Search Gate Inward No"),
                                                onChanged: (value) {
                                                  if(value.isEmpty || value == ""){
                                                    startVal = 0;
                                                    filteredList = [];
                                                    setState(() {
-                                                     if(inwardList.length > 15){
-                                                       for(int i=0; i < startVal + 15; i++){
+                                                     if(inwardList.length > 1000){
+                                                       for(int i=0; i < startVal + 1000; i++){
                                                          filteredList.add(inwardList[i]);
                                                        }
                                                      } else{
@@ -264,7 +274,10 @@ class _InwardListState extends State<InwardList> {
                                                  } else{
                                                    startVal = 0;
                                                    filteredList = [];
-                                                   fetchVehicleNo(searchVehicleNo.text);
+                                                   searchEntryDate.clear();
+                                                   searchPONo.clear();
+                                                   searchCancel.clear();
+                                                   fetchGateInNo(searchGateInNo.text);
                                                  }
                                                },
                                              ),
@@ -275,8 +288,8 @@ class _InwardListState extends State<InwardList> {
                                               width: 150,
                                               child: TextFormField(
                                                 style: const TextStyle(fontSize: 11),
-                                                controller: searchInvoiceNo,
-                                                decoration: searchInvoiceNoDecoration(hintText: "Search Invoice No"),
+                                                controller: searchPONo,
+                                                decoration: searchPoNoDecoration(hintText: "Search PO No"),
                                                 onChanged: (value) {
                                                   if(value.isEmpty || value == ""){
                                                     startVal = 0;
@@ -295,35 +308,11 @@ class _InwardListState extends State<InwardList> {
                                                   } else{
                                                     startVal = 0;
                                                     filteredList = [];
-                                                    fetchInvoiceNo(searchInvoiceNo.text);
+                                                    searchCancel.clear();
+                                                    searchEntryDate.clear();
+                                                    searchGateInNo.clear();
+                                                    fetchPoNo(searchPONo.text);
                                                   }
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 20, top: 0, bottom: 10),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(
-                                              height: 30,
-                                              width: 150,
-                                              child: TextFormField(
-                                                style: const TextStyle(fontSize: 11),
-                                                controller: searchInvoiceDate,
-                                                decoration: invoiceDateFieldDecoration(controller: searchInvoiceDate, hintText: "Select Invoice Date"),
-                                                onTap: () {
-                                                  setState(() {
-                                                    if(searchInvoiceDate.text.isEmpty || searchInvoiceDate.text == ""){
-                                                      startVal = 0;
-                                                      filteredList = inwardList;
-                                                    }
-                                                    selectInvoiceDate(context: context);
-                                                    searchVehicleNo.clear();
-                                                  });
                                                 },
                                               ),
                                             ),
@@ -341,34 +330,10 @@ class _InwardListState extends State<InwardList> {
                                                       startVal = 0;
                                                       filteredList = inwardList;
                                                     }
-                                                    selectEntryDate(context: context);
-                                                    // searchVehicleNo.clear();
-                                                  });
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 20, top: 0, bottom: 10),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(
-                                              height: 30,
-                                              width: 150,
-                                              child: TextFormField(
-                                                style: const TextStyle(fontSize: 11),
-                                                controller: searchEntryTime,
-                                                decoration: entryTimeFieldDecoration(controller: searchEntryTime, hintText: "Select Entry Time"),
-                                                onTap: () {
-                                                  setState(() {
-                                                    if(searchEntryTime.text.isEmpty || searchEntryTime.text == ""){
-                                                      startVal = 0;
-                                                      filteredList = inwardList;
-                                                    }
-                                                    selectEntryTime(context);
+                                                    selectEntryDate(context);
+                                                    searchCancel.clear();
+                                                    searchPONo.clear();
+                                                    searchGateInNo.clear();
                                                     // searchVehicleNo.clear();
                                                   });
                                                 },
@@ -380,17 +345,31 @@ class _InwardListState extends State<InwardList> {
                                               width: 150,
                                               child: TextFormField(
                                                 style: const TextStyle(fontSize: 11),
-                                                controller: searchVehicleInTime,
-                                                decoration: vehicleInTimeFieldDecoration(controller: searchVehicleInTime, hintText: "Select Vehicle In-Time"),
-                                                onTap: () {
-                                                  setState(() {
-                                                    if(searchVehicleInTime.text.isEmpty || searchVehicleInTime.text == ""){
-                                                      startVal = 0;
-                                                      filteredList = inwardList;
-                                                    }
-                                                    selectVehicleInTime(context);
-                                                    // searchVehicleNo.clear();
-                                                  });
+                                                controller: searchCancel,
+                                                decoration: searchCancelDecoration(hintText: "Search by Cancel"),
+                                                onChanged: (value) {
+                                                  if(value.isEmpty || value == ""){
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    setState(() {
+                                                      if(inwardList.length > 15){
+                                                        for(int i=0; i < startVal + 15; i++){
+                                                          filteredList.add(inwardList[i]);
+                                                        }
+                                                      } else{
+                                                        for(int i=0; i < inwardList.length; i++){
+                                                          filteredList.add(inwardList[i]);
+                                                        }
+                                                      }
+                                                    });
+                                                  } else{
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    searchGateInNo.clear();
+                                                    searchPONo.clear();
+                                                    searchEntryDate.clear();
+                                                    fetchCancel(searchCancel.text);
+                                                  }
                                                 },
                                               ),
                                             ),
@@ -422,7 +401,7 @@ class _InwardListState extends State<InwardList> {
                                                   child: SizedBox(
                                                     height: 25,
                                                     // width: 150,
-                                                    child: Text("Vehicle Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                    child: Text("PO Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                                                   ),
                                                 ),
                                               ),
@@ -432,27 +411,7 @@ class _InwardListState extends State<InwardList> {
                                                   child: SizedBox(
                                                     height: 25,
                                                     // width: 150,
-                                                    child: Text("Vehicle In-Time",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(top: 4.0),
-                                                  child: SizedBox(
-                                                    height: 25,
-                                                    // width: 150,
-                                                    child: Text("Invoice No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(top: 4.0),
-                                                  child: SizedBox(
-                                                    height: 25,
-                                                    // width: 150,
-                                                    child: Text("Invoice Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                    child: Text("Entry Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                                                   ),
                                                 ),
                                               ),
@@ -462,7 +421,7 @@ class _InwardListState extends State<InwardList> {
                                                   child: SizedBox(
                                                     height: 25,
                                                     width: 150,
-                                                    child: Text("PO Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                    child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                                                   ),
                                                 ),
                                               ),
@@ -482,6 +441,9 @@ class _InwardListState extends State<InwardList> {
                                         shrinkWrap: true,
                                         itemCount: filteredList.length,
                                         itemBuilder: (context, i) {
+                                          // print('-------- filteredList[$i] --------');
+                                          // print(_formatDate(filteredList[i]['InvoiceDate']));
+                                          // print(filteredList[i]['InvoiceDate']);
                                           if(i < filteredList.length){
                                             return Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,9 +451,11 @@ class _InwardListState extends State<InwardList> {
                                                 MaterialButton(
                                                   hoverColor: Colors.blue[50],
                                                   onPressed: () {
+                                                    print('-------- edit -------');
+                                                    print(filteredList[i]);
                                                     Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditInward(
-                                                        drawerWidth: drawerWidth,
-                                                        selectedDestination: widget.selectedDestination,
+                                                      drawerWidth: drawerWidth,
+                                                      selectedDestination: widget.selectedDestination,
                                                       inwardMap: filteredList[i],
                                                     ),));
                                                   },
@@ -505,7 +469,7 @@ class _InwardListState extends State<InwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['gateInwardNo']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Text(filteredList[i]['GateInwardNo']??"",style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
                                                         ),
@@ -514,7 +478,7 @@ class _InwardListState extends State<InwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['vehicleNumber']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Text(filteredList[i]['PurchaseOrderNo']??"",style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
                                                         ),
@@ -523,7 +487,8 @@ class _InwardListState extends State<InwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['vehicleInTime']??"",style: const TextStyle(fontSize: 11)),
+                                                              // child: Text(filteredList[i]['EntryDate']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Text(filteredList[i]['EntryDate'] != null ? _formatDate(filteredList[i]['EntryDate']) : "", style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
                                                         ),
@@ -532,25 +497,7 @@ class _InwardListState extends State<InwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['invoiceNo']??"",style: const TextStyle(fontSize: 11)),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Text(filteredList[i]['invoiceDate']??"",style: const TextStyle(fontSize: 11)),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Text(filteredList[i]['purchaseOrderNo']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Text(filteredList[i]['Cancelled']??"",style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
                                                         ),
@@ -590,28 +537,6 @@ class _InwardListState extends State<InwardList> {
   }
 
 
-  invoiceDateFieldDecoration( {required TextEditingController controller, required String hintText, bool? error, Function? onTap}) {
-    return  InputDecoration(
-      constraints: BoxConstraints(maxHeight: error==true ? 50:30),
-      hintText: hintText,
-      hintStyle: const TextStyle(fontSize: 11),
-      // suffixIcon: const Icon(Icons.calendar_month, size: 16, color: Colors.grey,),
-      suffixIcon: searchInvoiceDate.text.isEmpty?const Icon(Icons.calendar_month, size: 16, color: Colors.grey,):InkWell(
-          onTap: (){
-            setState(() {
-              searchInvoiceDate.clear();
-              filteredList = inwardList;
-            });
-          },
-          child: const Icon(Icons.close,size: 14,)),
-      border: const OutlineInputBorder(
-          borderSide: BorderSide(color:  Colors.blue)),
-      counterText: '',
-      contentPadding: const EdgeInsets.fromLTRB(12, 00, 0, 0),
-      enabledBorder:const OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
-      focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-    );
-  }
   entryDateFieldDecoration( {required TextEditingController controller, required String hintText, bool? error, Function? onTap}) {
     return  InputDecoration(
       constraints: BoxConstraints(maxHeight: error==true ? 50:30),
@@ -634,58 +559,27 @@ class _InwardListState extends State<InwardList> {
       focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
     );
   }
-  entryTimeFieldDecoration( {required TextEditingController controller, required String hintText, bool? error, Function? onTap}) {
-    return  InputDecoration(
-      constraints: BoxConstraints(maxHeight: error==true ? 50:30),
-      hintText: hintText,
-      hintStyle: const TextStyle(fontSize: 11),
-      // suffixIcon: const Icon(Icons.calendar_month, size: 16, color: Colors.grey,),
-      suffixIcon: searchEntryTime.text.isEmpty?const Icon(Icons.watch_later_outlined, size: 16, color: Colors.grey,):InkWell(
-          onTap: (){
-            setState(() {
-              searchEntryTime.clear();
-              filteredList = inwardList;
-            });
-          },
-          child: const Icon(Icons.close,size: 14,)),
-      border: const OutlineInputBorder(
-          borderSide: BorderSide(color:  Colors.blue)),
-      counterText: '',
-      contentPadding: const EdgeInsets.fromLTRB(12, 00, 0, 0),
-      enabledBorder:const OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
-      focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+  selectEntryDate(BuildContext context) async{
+    DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime.now()
     );
+    if(pickedDate == null) {
+      return;
+    }
+    String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
+    searchEntryDate.text = formattedDate;
+    fetchEntryDate(pickedDate);
   }
-  vehicleInTimeFieldDecoration( {required TextEditingController controller, required String hintText, bool? error, Function? onTap}) {
-    return  InputDecoration(
-      constraints: BoxConstraints(maxHeight: error==true ? 50:30),
-      hintText: hintText,
-      hintStyle: const TextStyle(fontSize: 11),
-      // suffixIcon: const Icon(Icons.calendar_month, size: 16, color: Colors.grey,),
-      suffixIcon: searchVehicleInTime.text.isEmpty?const Icon(Icons.watch_later_outlined, size: 16, color: Colors.grey,):InkWell(
-          onTap: (){
-            setState(() {
-              searchVehicleInTime.clear();
-              filteredList = inwardList;
-            });
-          },
-          child: const Icon(Icons.close,size: 14,)),
-      border: const OutlineInputBorder(
-          borderSide: BorderSide(color:  Colors.blue)),
-      counterText: '',
-      contentPadding: const EdgeInsets.fromLTRB(12, 00, 0, 0),
-      enabledBorder:const OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
-      focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-    );
-  }
-
-  searchVehicleNoDecoration({required String hintText, bool? error}){
+  searchGateInNoDecoration({required String hintText, bool? error}){
     return InputDecoration(
       hoverColor: mHoverColor,
-      suffixIcon: searchVehicleNo.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
+      suffixIcon: searchGateInNo.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
           onTap: (){
             setState(() {
-              searchVehicleNo.clear();
+              searchGateInNo.clear();
               filteredList = inwardList;
             });
           },
@@ -701,13 +595,35 @@ class _InwardListState extends State<InwardList> {
       focusedBorder:  OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :Colors.blue)),
     );
   }
-  searchInvoiceNoDecoration({required String hintText, bool? error}){
+  searchPoNoDecoration({required String hintText, bool? error}){
     return InputDecoration(
       hoverColor: mHoverColor,
-      suffixIcon: searchInvoiceNo.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
+      suffixIcon: searchPONo.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
           onTap: (){
             setState(() {
-              searchInvoiceNo.clear();
+              searchPONo.clear();
+              filteredList = inwardList;
+            });
+          },
+          child: const Icon(Icons.close,size: 14,)),
+      border: const OutlineInputBorder(
+          borderSide: BorderSide(color:  Colors.blue)),
+      constraints:  const BoxConstraints(maxHeight:35),
+      hintText: hintText,
+      hintStyle: const TextStyle(fontSize: 11),
+      counterText: '',
+      contentPadding: const EdgeInsets.fromLTRB(12, 00, 0, 0),
+      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :mTextFieldBorder)),
+      focusedBorder:  OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :Colors.blue)),
+    );
+  }
+  searchCancelDecoration({required String hintText, bool? error}){
+    return InputDecoration(
+      hoverColor: mHoverColor,
+      suffixIcon: searchCancel.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
+          onTap: (){
+            setState(() {
+              searchCancel.clear();
               filteredList = inwardList;
             });
           },
@@ -724,111 +640,35 @@ class _InwardListState extends State<InwardList> {
     );
   }
 
-  void fetchVehicleNo(String vehicleNo) {
-    if(inwardList.isNotEmpty && vehicleNo.isNotEmpty){
+  void fetchGateInNo(String gateInNo) {
+    if(inwardList.isNotEmpty && gateInNo.isNotEmpty){
       setState(() {
-        filteredList = inwardList.where((vehicle) => vehicle["vehicleNumber"].toLowerCase().contains(vehicleNo.toLowerCase())).toList();
+        filteredList = inwardList.where((inward) => inward["GateInwardNo"].toLowerCase().contains(gateInNo.toLowerCase())).toList();
       });
     }
   }
-  void fetchInvoiceNo(String invoiceNo) {
-    if(inwardList.isNotEmpty && invoiceNo.isNotEmpty){
+  void fetchPoNo(String poNo) {
+    if(inwardList.isNotEmpty && poNo.isNotEmpty){
       setState(() {
-        filteredList = inwardList.where((invoice) => invoice["invoiceNo"].toLowerCase().contains(invoiceNo.toLowerCase())).toList();
+        filteredList = inwardList.where((po) => po["PurchaseOrderNo"].toLowerCase().contains(poNo.toLowerCase())).toList();
       });
     }
   }
-  void fetchInvoiceDate(DateTime selectedDate){
-    if(inwardList.isNotEmpty && selectedDate != null){
-      String formattedDate = "${selectedDate.day}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.year.toString().padLeft(2, '0')}";
+  void fetchCancel(String cancelled) {
+    if(inwardList.isNotEmpty && cancelled.isNotEmpty){
       setState(() {
-        filteredList = inwardList.where((item) => item['invoiceDate'] == formattedDate).toList();
+        filteredList = inwardList.where((cancel) => cancel["Cancelled"].toLowerCase().contains(cancelled.toLowerCase())).toList();
       });
     }
   }
   void fetchEntryDate(DateTime selectedDate){
     if(inwardList.isNotEmpty && selectedDate != null){
-      String formattedDate = "${selectedDate.day}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.year.toString().padLeft(2, '0')}";
+      int milliseconds = selectedDate.millisecondsSinceEpoch + selectedDate.timeZoneOffset.inMilliseconds;
+      String formattedDate = "/Date($milliseconds)/";
       setState(() {
-        filteredList = inwardList.where((item) => item['entryDate'] == formattedDate).toList();
-      });
-    }
-  }
-  void fetchEntryTime(DateTime selectedTime){
-    if(inwardList.isNotEmpty && selectedTime != null){
-      String formattedTime = DateFormat('hh:mm a').format(selectedTime);
-      setState(() {
-        filteredList = inwardList.where((item) => item['entryTime'] == formattedTime).toList();
-      });
-    }
-  }
-  void fetchVehicleInTime(DateTime selectedTime){
-    if(inwardList.isNotEmpty && selectedTime != null){
-      String formattedTime = DateFormat('hh:mm a').format(selectedTime);
-      setState(() {
-        filteredList = inwardList.where((item) => item['vehicleInTime'] == formattedTime).toList();
+        filteredList = inwardList.where((item) => item['EntryDate'] == formattedDate).toList();
       });
     }
   }
 
-  selectInvoiceDate({required BuildContext context}) async{
-    DateTime? pickedDate = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(2000),
-        lastDate: DateTime.now()
-    );
-    if(pickedDate == null) {
-      return;
-    }
-    // datePicker.text = DateFormat("dd-MM-yyyy").format(pickedDate);
-    String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
-    searchInvoiceDate.text = formattedDate;
-    fetchInvoiceDate(pickedDate);
-  }
-  selectEntryDate({required BuildContext context}) async{
-    DateTime? pickedDate = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(2000),
-        lastDate: DateTime.now()
-    );
-    if(pickedDate == null) {
-      return;
-    }
-    // datePicker.text = DateFormat("dd-MM-yyyy").format(pickedDate);
-    String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
-    searchEntryDate.text = formattedDate;
-    fetchEntryDate(pickedDate);
-  }
-  TimeOfDay _time = TimeOfDay.now();
-  TimeOfDay _time2 = TimeOfDay.now();
-  late TimeOfDay picked;
-  late TimeOfDay picked2;
-   selectEntryTime(BuildContext context)async{
-    picked = (await showTimePicker(
-        context: context,
-        initialTime: _time
-    ))!;
-    setState(() {
-      _time = picked;
-      // String formattedTime = '${picked.hour}:${picked.minute}';
-      String formattedTime = DateFormat('hh:mm a').format(DateTime(0, 0, 0, picked.hour, picked.minute));
-      searchEntryTime.text = formattedTime;
-      fetchEntryTime(DateTime(0, 0, 0, picked.hour, picked.minute));
-    });
-  }
-   selectVehicleInTime(BuildContext context)async{
-     picked2 = (await showTimePicker(
-        context: context,
-        initialTime: _time2
-    ))!;
-    setState(() {
-      _time2 = picked2;
-      // String formattedTime = '${picked.hour}:${picked.minute}';
-      String formattedTime = DateFormat('hh:mm a').format(DateTime(0, 0, 0, picked2.hour, picked2.minute));
-      searchVehicleInTime.text = formattedTime;
-      fetchVehicleInTime(DateTime(0, 0, 0, picked2.hour, picked2.minute));
-    });
-  }
 }

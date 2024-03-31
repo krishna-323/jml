@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:adaptive_scrollbar/adaptive_scrollbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -44,10 +46,21 @@ class _EditInwardState extends State<EditInward> {
   final canceledController = TextEditingController();
   final receivedController = TextEditingController();
   final remarksController = TextEditingController();
+  final searchSupplierCodeController = TextEditingController();
+  final searchSupplierNameController = TextEditingController();
+  final searchPONoController = TextEditingController();
   late double drawerWidth;
 
   String dropdownValue1 = "";
-  String canceledValue1 = "";
+  String canceledValue1 = "NO";
+  List supplierCodeList = [];
+  List<dynamic> poNoList = [];
+  List suppliers = [];
+  List poNo = [];
+  List<dynamic> selectedPurchaseOrders = [];
+  List<dynamic> displayData =[];
+  List<Map<String, dynamic>> uniquePurchaseOrder = [];
+  List<dynamic> purchaseOrders = [];
   List<CustomPopupMenuEntry<String>> supplierCodePopUpList = <CustomPopupMenuEntry<String>>[
     const CustomPopupMenuItem(
       height: 40,
@@ -130,28 +143,56 @@ class _EditInwardState extends State<EditInward> {
     String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
     invoiceDateController.text = formattedDate;
   }
+  String _formatDate(String dateString) {
+    try {
+      int milliseconds = int.parse(dateString.substring(6, dateString.length - 2));
+      DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+      String formattedDate = DateFormat('dd-MM-yyyy').format(dateTime);
+      return formattedDate;
+    } catch (e) {
+      print('Error formatting date: $e');
+      return '';
+    }
+  }
   @override
   void initState() {
     // TODO: implement initState
     drawerWidth = 60.0;
     super.initState();
-    print(widget.inwardMap['gateInwardNo']);
-    gateInwardNoController.text = widget.inwardMap['gateInwardNo']??"";
-    plantController.text = widget.inwardMap['plant']??"";
-    entryDateController.text = widget.inwardMap['entryDate']??"";
-    entryTimeController.text = widget.inwardMap['entryTime']??"";
-    vehicleNoController.text = widget.inwardMap['vehicleNumber']??"";
-    vehicleInTimeController.text = widget.inwardMap['vehicleInTime']??"";
-    supplierCodeController.text = widget.inwardMap['supplierCode']??"";
-    invoiceNoController.text = widget.inwardMap['invoiceNo']??"";
-    supplierNameController.text = widget.inwardMap['supplierName']??"";
-    invoiceDateController.text = widget.inwardMap['invoiceDate']??"";
-    purchaseOrderController.text = widget.inwardMap['purchaseOrderNo']??"";
-    poTypeController.text = widget.inwardMap['purchaseOrderType'??""];
-    enteredByController.text = widget.inwardMap['entredBy']??"";
-    canceledController.text = widget.inwardMap['canceledBy']??"";
-    receivedController.text = widget.inwardMap['receivedBy']??"";
-    remarksController.text = widget.inwardMap['remarks']??"";
+    print(widget.inwardMap);
+    gateInwardNoController.text = widget.inwardMap['GateInwardNo']??"";
+    plantController.text = widget.inwardMap['Plant']??"";
+    entryDateController.text = _formatDate(widget.inwardMap['EntryDate']??"");
+    entryTimeController.text = widget.inwardMap['EntryTime']??"";
+    vehicleNoController.text = widget.inwardMap['VehicleNumber']??"";
+    vehicleInTimeController.text = widget.inwardMap['VehicleIntime']??"";
+    supplierCodeController.text = widget.inwardMap['SupplierCode']??"";
+    invoiceNoController.text = widget.inwardMap['InvoiceNo']??"";
+    supplierNameController.text = widget.inwardMap['SupplierName']??"";
+    invoiceDateController.text = _formatDate(widget.inwardMap['InvoiceDate']??"");
+    purchaseOrderController.text = widget.inwardMap['PurchaseOrderNo']??"";
+    // poTypeController.text = widget.inwardMap['purchaseOrderType'??""];
+    enteredByController.text = widget.inwardMap['EnteredBy']??"";
+    canceledController.text = widget.inwardMap['Cancelled']??"";
+    // receivedController.text = widget.inwardMap['ReceivedBy']??"";
+    remarksController.text = widget.inwardMap['Remarks']??"";
+
+    getInitialData();
+  }
+  Future getInitialData() async{
+    var data = await getSupplierCode();
+    if(data != null){
+      suppliers = data.map((entry){
+        return {
+          "Supplier":entry["Supplier"],
+          "SupplierName": entry["SupplierName"],
+        };
+      }).toList();
+    }
+    supplierCodeList = suppliers;
+    setState(() {
+      loading = false;
+    });
   }
   @override
   Widget build(BuildContext context) {
@@ -209,6 +250,8 @@ class _EditInwardState extends State<EditInward> {
                                 "canceledBy": canceledController.text,
                                 "receivedBy": receivedController.text
                               };
+                              print('-------- edit inward -----------');
+                              print(editInward);
                             },child: const Text("Save",style: TextStyle(color: Colors.white)),),
                         )
                       ],
@@ -466,40 +509,36 @@ class _EditInwardState extends State<EditInward> {
                                                           const SizedBox(height: 6,),
                                                           SizedBox(
                                                             height: 30,
-                                                            child: Focus(
-                                                                skipTraversal: true,
-                                                                descendantsAreFocusable: true,
-                                                                child: LayoutBuilder(
-                                                                  builder: (BuildContext context, BoxConstraints constraints) {
-                                                                    return CustomPopupMenuButton(
-                                                                      decoration: customPopupDecoration(hintText:dropdownValue1,),
-                                                                      itemBuilder: (BuildContext context) {
-                                                                        return supplierCodePopUpList;
-                                                                      },
-                                                                      hintText: "",
-                                                                      childWidth: constraints.maxWidth,
-                                                                      textController: supplierCodeController,
-                                                                      shape:  const RoundedRectangleBorder(
-                                                                        side: BorderSide(color: mTextFieldBorder),
-                                                                        borderRadius: BorderRadius.all(
-                                                                          Radius.circular(5),
-                                                                        ),
-                                                                      ),
-                                                                      offset: const Offset(1, 40),
-                                                                      tooltip: '',
-                                                                      onSelected: ( value) {
-                                                                        setState(() {
-                                                                          supplierCodeController.text = value;
-                                                                          dropdownValue1 = value;
-                                                                        });
-                                                                      },
-                                                                      onCanceled: () {
-
-                                                                      },
-                                                                      child: Container(),
-                                                                    );
-                                                                  },
-                                                                )
+                                                            child: TextField(
+                                                              style: const TextStyle(fontSize: 11),
+                                                              controller: supplierCodeController,
+                                                              readOnly: true,
+                                                              decoration:  const InputDecoration(
+                                                                hintText: " Select Supplier",
+                                                                hintStyle: TextStyle(fontSize: 11,),
+                                                                border: OutlineInputBorder(
+                                                                    borderSide: BorderSide(color:  Colors.blue)
+                                                                ),
+                                                                contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
+                                                                suffixIcon: Icon(
+                                                                  Icons.arrow_drop_down_outlined,
+                                                                  color: Colors.blue,size: 16,
+                                                                ),
+                                                                enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
+                                                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                                              ),
+                                                              onTap: () {
+                                                                showDialog(
+                                                                  context: context,
+                                                                  builder: (context) => _showSupplierDialog(),
+                                                                ).then((value) {
+                                                                  setState(() {
+                                                                    loading = false;
+                                                                    supplierCodeController.text = value;
+                                                                  });
+                                                                  getPOData(value);
+                                                                });
+                                                              },
                                                             ),
                                                           ),
                                                         ],
@@ -516,14 +555,48 @@ class _EditInwardState extends State<EditInward> {
                                                           const SizedBox(height: 10,),
                                                           const Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                                                           const SizedBox(height: 6,),
-                                                          TextFormField(
-                                                            style: const TextStyle(fontSize: 11),
-                                                            autofocus: true,
-                                                            controller: supplierNameController,
-                                                            decoration: customerFieldDecoration(hintText: '',controller: supplierNameController),
-                                                            onChanged: (value){
+                                                          SizedBox(
+                                                            height: 30,
+                                                            child: TextFormField(
+                                                              style: const TextStyle(fontSize: 11),
+                                                              readOnly: true,
+                                                              autofocus: true,
+                                                              controller: supplierNameController,
+                                                              decoration:  const InputDecoration(
+                                                                hintText: " Select Supplier Name",
+                                                                hintStyle: TextStyle(fontSize: 11,),
+                                                                border: OutlineInputBorder(
+                                                                    borderSide: BorderSide(color:  Colors.blue)
+                                                                ),
+                                                                contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
+                                                                suffixIcon: Icon(
+                                                                  Icons.arrow_drop_down_outlined,
+                                                                  color: Colors.blue,size: 16,
+                                                                ),
+                                                                enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
+                                                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                                              ),
+                                                              onChanged: (value){
 
-                                                            },
+                                                              },
+                                                              onTap: () {
+                                                                showDialog(
+                                                                  context: context,
+                                                                  builder: (context) => _showSupplierNameDialog(),
+                                                                ).then((value) {
+                                                                  setState(() {
+                                                                    loading = false;
+                                                                    supplierNameController.text = value["name"];
+                                                                    supplierCodeController.text = value["code"];
+                                                                    print('-------- supplier name then ----------');
+                                                                    print(supplierNameController.text);
+                                                                    print(supplierCodeController.text);
+                                                                    print(poNoList);
+                                                                  });
+                                                                  getPOData(value["code"]);
+                                                                });
+                                                              },
+                                                            ),
                                                           ),
                                                         ],
                                                       ),
@@ -589,14 +662,38 @@ class _EditInwardState extends State<EditInward> {
                                                         children: [
                                                           const Text("Purchase Order No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                                                           const SizedBox(height: 6,),
-                                                          TextFormField(
-                                                            style: const TextStyle(fontSize: 11),
-                                                            autofocus: true,
-                                                            controller: purchaseOrderController,
-                                                            decoration: customerFieldDecoration(hintText: '',controller: purchaseOrderController),
-                                                            onChanged: (value){
-
-                                                            },
+                                                          SizedBox(
+                                                            height: 30,
+                                                            child: TextFormField(
+                                                              style: const TextStyle(fontSize: 11),
+                                                              readOnly: true,
+                                                              controller: purchaseOrderController,
+                                                              decoration: const InputDecoration(
+                                                                hintText: " Select Purchase Order Number",
+                                                                hintStyle: TextStyle(fontSize: 11,),
+                                                                border: OutlineInputBorder(
+                                                                    borderSide: BorderSide(color:  Colors.blue)
+                                                                ),
+                                                                contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
+                                                                suffixIcon: Icon(
+                                                                  Icons.arrow_drop_down_outlined,
+                                                                  color: Colors.blue,size: 16,
+                                                                ),
+                                                                enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
+                                                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                                              ),
+                                                              onTap: () {
+                                                                showDialog(
+                                                                  context: context,
+                                                                  builder: (context) => _showPODialog(),
+                                                                ).then((value) {
+                                                                  setState(() {
+                                                                    loading = false;
+                                                                    purchaseOrderController.text = value;
+                                                                  });
+                                                                });
+                                                              },
+                                                            ),
                                                           ),
                                                           const SizedBox(height: 10,),
                                                         ],
@@ -739,28 +836,29 @@ class _EditInwardState extends State<EditInward> {
                                                     ),
                                                   ),
                                                   const SizedBox(width: 80,),
-                                                  Flexible(
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.all(8),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          const SizedBox(height: 10,),
-                                                          const Text("Received By",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                          const SizedBox(height: 6,),
-                                                          TextFormField(
-                                                            style: const TextStyle(fontSize: 11),
-                                                            autofocus: true,
-                                                            controller: receivedController,
-                                                            decoration: customerFieldDecoration(hintText: '',controller: receivedController),
-                                                            onChanged: (value){
-
-                                                            },
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
+                                                  // Flexible(
+                                                  //   child: Padding(
+                                                  //     padding: const EdgeInsets.all(8),
+                                                  //     child: Column(
+                                                  //       crossAxisAlignment: CrossAxisAlignment.start,
+                                                  //       children: [
+                                                  //         const SizedBox(height: 10,),
+                                                  //         const Text("Received By",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                  //         const SizedBox(height: 6,),
+                                                  //         TextFormField(
+                                                  //           style: const TextStyle(fontSize: 11),
+                                                  //           autofocus: true,
+                                                  //           controller: receivedController,
+                                                  //           decoration: customerFieldDecoration(hintText: '',controller: receivedController),
+                                                  //           onChanged: (value){
+                                                  //
+                                                  //           },
+                                                  //         ),
+                                                  //       ],
+                                                  //     ),
+                                                  //   ),
+                                                  // ),
+                                                  Expanded(child: Container())
                                                 ],
                                               ),
                                               Row(
@@ -813,6 +911,296 @@ class _EditInwardState extends State<EditInward> {
         ],
       ),
     );
+  }
+
+
+  Future getSupplierCode() async{
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/A_Supplier";
+    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': authToken,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        Map tempData ={};
+        tempData= json.decode(response.body);
+        if(tempData['d']['results'].isEmpty){
+          if(mounted){
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No Data Found !')));
+          }
+          setState(() {
+            loading = false;
+          });
+          return [];
+        }
+        else{
+          setState(() {
+            displayData = tempData['d']['results'];
+            loading = false;
+          });
+        }
+        return json.decode(response.body)['d']['results'];
+      } else {
+        print('Request failed with status: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error occurred in API: $e');
+      return null;
+    }
+  }
+
+
+  Future<List<dynamic>?> getPOData(String supplierCode) async {
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/PurchaseOrder/PurchaseOrderScheduleLine?filter=OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA' and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder";
+    String authToken = "Basic ${base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'))}";
+    print('------- get po URL -------');
+    print(url);
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Authorization': authToken},
+      );
+      if (response.statusCode == 200) {
+        Map<String, dynamic>? tempData = json.decode(response.body);
+        if(tempData!['value'].isEmpty || tempData['value'] == null){
+          if(mounted){
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No PO Number !')));
+          }
+          setState(() {
+            purchaseOrderController.clear();
+            poTypeController.clear();
+            purchaseOrders = [];
+            poNoList = [];
+          });
+        }
+        else if (tempData != null &&
+            tempData.containsKey('value') &&
+            tempData['value'] != null) {
+          purchaseOrders = tempData['value'];
+          poNoList = purchaseOrders.map((order) => order['_PurchaseOrder']['PurchaseOrder']).toSet().toList();
+          print('------- get po data ----------');
+          print(poNoList);
+          return purchaseOrders;
+        } else {
+          print('Error: Unable to find results in response body');
+          return null;
+        }
+      } else {
+        print('Request failed with status: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error occurred in API: $e');
+      return null;
+    }
+  }
+
+  _showSupplierDialog(){
+    return AlertDialog(
+      title: const Text("Select Supplier Code"),
+      content: StatefulBuilder(
+        builder: (context, setState) {
+          return SizedBox(
+            height: 500,
+            child: Column(
+              children: [
+                Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        controller: searchSupplierCodeController,
+                        decoration: const InputDecoration(labelText: "Search Supplier Code"),
+                        onChanged: (value) {
+                          setState((){
+                            if(value.isEmpty || value == ""){
+                              supplierCodeList = [];
+                            }
+                            filterSuppliers(value);
+                          });
+                        },
+                      ),
+                    )
+                ),
+                SizedBox(
+                  width: 500,
+                  height: 400,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: supplierCodeList.length,
+                    itemBuilder: (context, index) {
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pop(context, supplierCodeList[index]["Supplier"].toString());
+                          print('------- supplier on tap --------');
+                          print(supplierCodeList[index]["SupplierName"]);
+                          print(poNoList);
+                          supplierNameController.text = supplierCodeList[index]["SupplierName"];
+                        },
+                        child: ListTile(
+                          title: Text(supplierCodeList[index]["Supplier"].toString()),
+                        ),
+                      );
+                    },),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  _showSupplierNameDialog(){
+    return AlertDialog(
+      title: const Text("Select Supplier Name"),
+      content: StatefulBuilder(
+        builder: (context, setState) {
+          return SizedBox(
+            height: 500,
+            child: Column(
+              children: [
+                Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        controller: searchSupplierNameController,
+                        decoration: const InputDecoration(labelText: "Search Supplier Name"),
+                        onChanged: (value) {
+                          setState((){
+                            if(value.isEmpty || value == ""){
+                              supplierCodeList = [];
+                            }
+                            filterSuppliersName(value);
+                          });
+                        },
+                      ),
+                    )
+                ),
+                SizedBox(
+                  width: 500,
+                  height: 400,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: supplierCodeList.length,
+                    itemBuilder: (context, index) {
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pop(
+                              context,
+                              {
+                                "name": supplierCodeList[index]["SupplierName"].toString(),
+                                "code": supplierCodeList[index]["Supplier"].toString(),
+                              }
+                          );
+                          print('------- supplier  name on tap --------');
+                          print(supplierCodeList[index]["SupplierName"]);
+                          print(supplierCodeList[index]["Supplier"]);
+                          print(poNoList);
+                          supplierCodeController.text = supplierCodeList[index]["Supplier"];
+                        },
+                        child: ListTile(
+                          title: Text(supplierCodeList[index]["SupplierName"].toString()),
+                        ),
+                      );
+                    },),
+                ),
+              ],
+            ),
+          );
+        },),
+    );
+  }
+
+  _showPODialog(){
+    return AlertDialog(
+      title: const Text("Select Purchase Order No"),
+      content: StatefulBuilder(
+        builder: (context, setState) {
+          return SizedBox(
+            height: 500,
+            child: Column(
+              children: [
+                Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        controller: searchPONoController,
+                        decoration: const InputDecoration(labelText: "Search PO No"),
+                        onChanged: (value) {
+                          setState((){
+                            if(value.isEmpty || value == ""){
+                              poNoList = [];
+                            }
+                            filterPONo(value);
+                          });
+                        },
+                      ),
+                    )
+                ),
+                SizedBox(
+                  width: 500,
+                  height: 400,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: poNoList.length,
+                    itemBuilder: (context, index) {
+                      var purchaseOrder = poNoList[index];
+                      var purchaseOrderType = getPurchaseOrderType(purchaseOrder);
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pop(context, purchaseOrder );
+                          poTypeController.text = purchaseOrderType;
+                        },
+                        child: ListTile(
+                          title: Text(purchaseOrder),
+                        ),
+                      );
+                    },),
+                ),
+              ],
+            ),
+          );
+        },),
+    );
+  }
+
+  String getPurchaseOrderType(String purchaseOrder) {
+    var order = purchaseOrders.firstWhere((order) => order['_PurchaseOrder']['PurchaseOrder'] == purchaseOrder, orElse: () => null);
+    return order != null ? order['_PurchaseOrder']['PurchaseOrderType'] : '';
+  }
+
+  void filterSuppliers(String value){
+    setState(() {
+      supplierCodeList = suppliers.where((supplier) {
+        final code = supplier["Supplier"].toString().toLowerCase();
+        return code.contains(value.toLowerCase());
+      }).toList();
+    });
+  }
+
+  void filterSuppliersName(String value){
+    setState(() {
+      supplierCodeList = suppliers.where((supplier) {
+        final code = supplier["SupplierName"].toString().toLowerCase();
+        return code.contains(value.toLowerCase());
+      }).toList();
+    });
+  }
+
+  filterPONo(String searchQuery) {
+    if (searchQuery.isEmpty) {
+      poNoList = purchaseOrders.map((order) => order['_PurchaseOrder']['PurchaseOrder']).toList();
+    } else {
+      poNoList = purchaseOrders
+          .where((order) => order['_PurchaseOrder']['PurchaseOrder'].contains(searchQuery))
+          .map((order) => order['_PurchaseOrder']['PurchaseOrder'])
+          .toList();
+    }
   }
 
   customerFieldDecoration( {required TextEditingController controller, required String hintText, bool? error, Function? onTap}) {

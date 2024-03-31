@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:jml/home/home_screen.dart';
 import 'package:jml/utils/jml_colors.dart';
+import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,12 +19,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool userBool=false;
   final password = TextEditingController();
   bool showError = false;
-  bool passWordHindBool=true;
   bool passWordColor = false;
-
-  void passwordHideAndViewFunc() {
+  final FocusNode passwordFocusNode = FocusNode();
+  bool showHidePassword=true;
+  void passwordHideAndViewFunc(){
     setState(() {
-      passWordHindBool = !passWordHindBool;
+      showHidePassword = !showHidePassword;
     });
   }
 
@@ -55,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Padding(
                               padding: EdgeInsets.all(18.0),
-                              child: Image.asset("assets/logo/Ikyam_color_logo.png"),
+                              child: Image.asset("assets/logo/jmi_logo.png"),
                             )
                           ],
                         ),
@@ -83,14 +87,39 @@ class _LoginScreenState extends State<LoginScreen> {
                                 controller: userName,
                                 style: const TextStyle(fontSize: 12),
                                 decoration: decorationInput3("User Name", userBool),
+                                onEditingComplete: () {
+                                  FocusScope.of(context).requestFocus(passwordFocusNode);
+                                },
                               ),
                             ),
                             SizedBox(
                               height: 30,
                               child: TextField(
                                 controller: password,
+                                obscureText: showHidePassword,
+                                enableSuggestions: false,
+                                autocorrect: false,
                                 style: const TextStyle(fontSize: 12),
-                                decoration: decorationInput3("Password", userBool),
+                                decoration: decorationInputPassword("Password", userBool,showHidePassword,passwordHideAndViewFunc),
+                                onEditingComplete: () {
+                                  postLogin(userName, password).then((value) {
+                                    if(value){
+                                      Navigator.of(context).push(
+                                          PageRouteBuilder(
+                                            pageBuilder: (context, animation, secondaryAnimation) =>
+                                            const HomeScreen(selectedDestination: 0,drawerWidth: 190),
+                                          )
+                                      );
+                                    } else{
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Login failed. Invalid username or password.'),
+                                        ),
+                                      );
+                                    }
+
+                                  });
+                                },
                               ),
                             ),
                             Container(
@@ -99,12 +128,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Color(0xff00004d),
                               ),
                               child: TextButton(onPressed: () {
-                                Navigator.of(context).push(
-                                    PageRouteBuilder(
-                                      pageBuilder: (context, animation, secondaryAnimation) =>  const HomeScreen(selectedDestination: 0,drawerWidth: 190),
-                                    )
-                                );
-                              }, child: const Text("Login",style:  TextStyle(color: Colors.white,),)),
+                               postLogin(userName, password).then((value) {
+                                 if(value){
+                                   Navigator.of(context).push(
+                                       PageRouteBuilder(
+                                         pageBuilder: (context, animation, secondaryAnimation) =>
+                                         const HomeScreen(selectedDestination: 0,drawerWidth: 190),
+                                       )
+                                   );
+                                 } else{
+                                   ScaffoldMessenger.of(context).showSnackBar(
+                                     SnackBar(
+                                       content: Text('Login failed. Invalid username or password.'),
+                                     ),
+                                   );
+                                 }
+                                 
+                               });
+                              },
+                                  child: const Text("Login",style:  TextStyle(color: Colors.white,),)),
                             ),
                           ],
                         ),
@@ -120,6 +162,54 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future postLogin(TextEditingController userName, TextEditingController password) async{
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/login";
+    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
+    try{
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': authToken,
+        },
+          body: json.encode({
+            "password": password.text,
+            "username": userName.text
+          })
+      );
+
+      if (response.statusCode == 200) {
+        Map responseData ={};
+        try{
+          responseData= jsonDecode(response.body);
+          print('------- login ----------');
+          print(responseData);
+          if(responseData.containsKey("status")){
+            if (responseData['status'] == 'success') {
+              print("Login successful!");
+              return true;
+            } else {
+              print("Login failed: ${responseData['message']}");
+              return false;
+            }
+          }else {
+            print("Error: 'status' key not found in response data");
+            return false;
+          }
+        }
+        catch(e){
+          log(response.body);
+          return false;
+        }
+      } else {
+        print("Error: ${response.statusCode}");
+        return false;
+      }
+    }catch(e){
+      print("Exception during login: $e");
+      return false;
+    }
+  }
   decorationInput3(String hintString, bool val,) {
     return  InputDecoration(
 
@@ -134,6 +224,29 @@ class _LoginScreenState extends State<LoginScreen> {
         enabledBorder:const OutlineInputBorder(borderSide:  BorderSide(color: mTextFieldBorder)),
         focusedBorder:  const OutlineInputBorder(borderSide:  BorderSide(color:Color(0xff00004d))),
         border:   const OutlineInputBorder(borderSide:  BorderSide(color:Color(0xff00004d)))
+    );
+  }
+  decorationInputPassword(String hintString, bool val, bool passWordHind,  passwordHideAndView, ) {
+    return InputDecoration(
+        label: Text(
+          hintString,
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            passWordHind ? Icons.visibility : Icons.visibility_off,size: 20,
+          ),
+          onPressed: passwordHideAndView,
+        ),suffixIconColor: val?const Color(0xff00004d):Colors.grey,
+        // suffixIconColor:val?  const Color(0xff00004d):Colors.grey,
+        counterText: "",
+        contentPadding: const EdgeInsets.fromLTRB(12, 00, 0, 0),
+        hintText: hintString,labelStyle: const TextStyle(fontSize: 12,),
+
+        disabledBorder:  const OutlineInputBorder(borderSide:  BorderSide(color:  Colors.white)),
+        enabledBorder:const OutlineInputBorder(borderSide:  BorderSide(color: mTextFieldBorder)),
+        focusedBorder:  const OutlineInputBorder(borderSide:  BorderSide(color: Color(0xff00004d))),
+        border:   const OutlineInputBorder(borderSide:  BorderSide(color: Color(0xff00004d)))
+
     );
   }
 }

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:adaptive_scrollbar/adaptive_scrollbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:jml/inward/inward_list.dart';
 import 'package:jml/utils/custom_loader.dart';
 import 'package:http/http.dart' as http;
 import '../utils/custom_appbar.dart';
@@ -99,17 +100,23 @@ class _AddInwardState extends State<AddInward> {
   late String entryDateTime;
   late String invoiceDateTime;
   late String formattedTime ;
+  late String formattedEntryTime ;
   late String formattedVehicleTime ;
   Future<void> selectTime(BuildContext context)async{
     picked = (await showTimePicker(
         context: context,
         initialTime: _time
     ))!;
-    setState(() {
-      _time = picked;
-      String formattedTime = DateFormat('hh:mm a').format(DateTime(0, 0, 0, picked.hour, picked.minute));
-      entryTimeController.text = formattedTime;
-    });
+    if(picked !=null){
+      setState(() {
+        _time = picked;
+        int hour = picked.hour;
+        int minute = picked.minute;
+        formattedEntryTime = 'PT${hour}H${minute}M00S';
+        String formattedTime = DateFormat('hh:mm a').format(DateTime(0, 0, 0, hour, minute));
+        entryTimeController.text = formattedTime;
+      });
+    }
   }
   Future<void> selectVehicleInTime(BuildContext context)async{
     picked2 = (await showTimePicker(
@@ -124,8 +131,6 @@ class _AddInwardState extends State<AddInward> {
         formattedVehicleTime = 'PT${hour}H${minute}M00S';
         String formattedTime = DateFormat('hh:mm a').format(DateTime(0, 0, 0, hour, minute));
         vehicleInTimeController.text = formattedTime;
-        print('--------- vehicle in time ---------');
-        print(formattedVehicleTime);
       });
     }
   }
@@ -142,6 +147,10 @@ class _AddInwardState extends State<AddInward> {
     }
     String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
     entryDateController.text = formattedDate;
+    entryDateTime = DateFormat("yyyy-MM-dd").format(pickedDate) + "T00:00:00";
+    print('-------- entry date -------');
+    print(entryDateTime);
+    print(entryDateController.text);
   }
   selectInvoiceDate(BuildContext context) async{
     DateTime? pickedDate = await showDatePicker(
@@ -167,15 +176,13 @@ class _AddInwardState extends State<AddInward> {
     super.initState();
     entryDateController.text = DateFormat("dd-MM-yyyy").format(DateTime.now());
     entryTimeController.text = DateFormat('hh:mm a').format(DateTime.now());
-    print('--------- init -------');
-    print(entryTimeController.text);
+    getGateInNo();
     String entryDate = DateFormat("yyyy-MM-dd").format(DateTime.now());
     entryDateTime = "${entryDate}T00:00:00";
     List<String> timeComponents = entryTimeController.text.split(':');
     int hour = int.parse(timeComponents[0]);
     int minute = int.parse(timeComponents[1].split(' ')[0]);
-    formattedTime = 'PT${hour}H${minute}M00S';
-    print(formattedTime);
+    formattedEntryTime = 'PT${hour}H${minute}M00S';
     getInitialData();
     canceledController.text = canceledValue1;
   }
@@ -208,711 +215,679 @@ class _AddInwardState extends State<AddInward> {
           CustomDrawer(drawerWidth, widget.selectedDestination),
           const VerticalDivider(width: 1,thickness: 1),
           Expanded(
-            child: Scaffold(
-              backgroundColor: const Color(0xffF0F4F8),
-              appBar: PreferredSize(
-                preferredSize: const Size.fromHeight(88.0),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 30),
-                  child: AppBar(
-                    elevation: 1,
-                    surfaceTintColor: Colors.white,
-                    shadowColor: Colors.black,
-                    title: const Text("Inward Details"),
-                    centerTitle: true,
-                    leading: InkWell(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        //Navigator.pushReplacementNamed(context, "/home");
-                      },
-                      child: const Icon(Icons.keyboard_backspace_outlined),
+              child: Scaffold(
+                backgroundColor: const Color(0xffF0F4F8),
+                appBar: PreferredSize(
+                  preferredSize: const Size.fromHeight(88.0),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 30),
+                    child: AppBar(
+                      elevation: 1,
+                      surfaceTintColor: Colors.white,
+                      shadowColor: Colors.black,
+                      title: const Text("Inward Details"),
+                      centerTitle: true,
+                      leading: InkWell(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          //Navigator.pushReplacementNamed(context, "/home");
+                        },
+                        child: const Icon(Icons.keyboard_backspace_outlined),
+                      ),
+                      actions: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 20),
+                          child: MaterialButton(
+                            color: Colors.blue,
+                            onPressed: () {
+                              if (supplierNameController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Select Supplier Name")));
+                              } else if (invoiceNoController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Number")));
+                              } else if (invoiceDateController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Date")));
+                              } else if (vehicleNoController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Number")));
+                              } else if (vehicleInTimeController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle In-Time")));
+                              } else {
+                                Map savedInward = {
+                                  "GateInwardNo": gateInwardNoController.text,
+                                  "EntryDate": entryDateTime,
+                                  "EntryTime": formattedEntryTime,
+                                  "Plant": plantController.text,
+                                  "VehicleNumber": vehicleNoController.text,
+                                  "VehicleIntime": formattedVehicleTime,
+                                  "SupplierCode": supplierCodeController.text,
+                                  "SupplierName": supplierNameController.text,
+                                  "PurchaseOrderNo": purchaseOrderController.text,
+                                  "InvoiceNo": invoiceNoController.text,
+                                  "InvoiceDate": invoiceDateTime,
+                                  "EnteredBy": enteredByController.text,
+                                  "Remarks": remarksController.text,
+                                  "Cancelled": canceledController.text,
+                                  // "ReceivedBy": receivedController.text
+                                };
+                                print('--------- saved inward ----------');
+                                print(savedInward);
+                                BuildContext dialogContext = context;
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('Gate Inward Confirmation'),
+                                      content: Text('GateInwardNo: ${gateInwardNoController.text}'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(dialogContext).pop(); // Close the dialog
+                                            postInwardApi(savedInward, dialogContext).then((value) {
+                                              Navigator.of(dialogContext).push(PageRouteBuilder(
+                                                pageBuilder: (context, animation, secondaryAnimation) => InwardList(
+                                                    drawerWidth: widget.drawerWidth,
+                                                    selectedDestination: widget.selectedDestination
+                                                ),
+                                              ));
+                                            });
+                                          },
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    );
+                                  },);
+                              }
+                            },
+                            child: const Text("Save", style: TextStyle(color: Colors.white)),
+                          ),
+                        )
+                      ],
                     ),
-                    actions: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 20),
-                        child: MaterialButton(
-                          color: Colors.blue,
-                          onPressed: () {
-                            Map savedInward = {
-                              "GateInwardNo": gateInwardNoController.text,
-                              // "EntryDate": entryDateController.text,
-                              // "EntryTime": entryTimeController.text,
-                              "EntryDate": entryDateTime,
-                              "EntryTime": formattedTime,
-                              "Plant": plantController.text,
-                              "VehicleNumber": vehicleNoController.text,
-                              // "VehicleIntime": vehicleInTimeController.text,
-                              "VehicleIntime": formattedVehicleTime,
-                              "SupplierCode": supplierCodeController.text,
-                              "SupplierName": supplierNameController.text,
-                              "PurchaseOrderNo": purchaseOrderController.text,
-                              // "PurchaseOrderType": poTypeController.text,
-                              "InvoiceNo": invoiceNoController.text,
-                              // "InvoiceDate": invoiceDateController.text,
-                              "InvoiceDate": invoiceDateTime,
-                              "EnteredBy": enteredByController.text,
-                              "Remarks": remarksController.text,
-                              "Cancelled": canceledController.text,
-                              "ReceivedBy": receivedController.text
-                            };
-                            print('--------- saved inward ----------');
-                            print(savedInward);
-                            postInwardApi(savedInward,context);
-                        },child: const Text("Save",style: TextStyle(color: Colors.white)),),
-                      )
-                    ],
                   ),
                 ),
-              ),
-              body: CustomLoader(
+                body: CustomLoader(
                   inAsyncCall: loading,
-                child: AdaptiveScrollbar(
-                  underColor: Colors.blueGrey.withOpacity(0.3),
-                  sliderDefaultColor: Colors.grey.withOpacity(0.7),
-                  sliderActiveColor: Colors.grey,
-                  controller: _verticalScrollController,
                   child: AdaptiveScrollbar(
-                    position: ScrollbarPosition.bottom,
                     underColor: Colors.blueGrey.withOpacity(0.3),
                     sliderDefaultColor: Colors.grey.withOpacity(0.7),
                     sliderActiveColor: Colors.grey,
-                    controller: _horizontalScrollController,
-                    child: SingleChildScrollView(
-                      controller: _verticalScrollController,
-                      scrollDirection: Axis.vertical,
+                    controller: _verticalScrollController,
+                    child: AdaptiveScrollbar(
+                      position: ScrollbarPosition.bottom,
+                      underColor: Colors.blueGrey.withOpacity(0.3),
+                      sliderDefaultColor: Colors.grey.withOpacity(0.7),
+                      sliderActiveColor: Colors.grey,
+                      controller: _horizontalScrollController,
                       child: SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: Padding(
+                        controller: _verticalScrollController,
+                        scrollDirection: Axis.vertical,
+                        child: SingleChildScrollView(
+                          controller: _horizontalScrollController,
+                          scrollDirection: Axis.horizontal,
+                          child: Padding(
                             padding: const EdgeInsets.only(top: 20, left: 80, bottom: 30, right: 80),
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width/1.2,
-                                child: Card(
-                                  color: Colors.white,
-                                  surfaceTintColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                    side: BorderSide(
-                                        color: mTextFieldBorder.withOpacity(0.8),
-                                        width: 1
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                  width: 1100,
+                                  child: Card(
+                                    color: Colors.white,
+                                    surfaceTintColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                      side: BorderSide(
+                                          color: mTextFieldBorder.withOpacity(0.8),
+                                          width: 1
+                                      ),
                                     ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(
-                                        height: 40,
-                                        child: Padding(
-                                          padding: EdgeInsets.only(left: 26,top: 10,right: 0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Padding(
+                                          padding: EdgeInsets.only(left: 26,top: 8,right: 0,bottom: 8),
                                           child: Text("Gate Inward", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold,fontSize: 12)),
                                         ),
-                                      ),
-                                      const Divider(color: mTextFieldBorder,height: 1),
-                                      Padding(
-                                          padding: const EdgeInsets.only(left: 18,top: 0,right: 18),
-                                        child: Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Padding(
+                                        const Divider(color: mTextFieldBorder,height: 1),
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 18,top: 10,right: 18,bottom: 10),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Column(
+                                                children: [
+                                                  Padding(
                                                     padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                    child: Row(
                                                       children: [
-                                                        const SizedBox(height: 15,),
-                                                        const Text("Gate Inward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          // autofocus: true,
-                                                          controller: gateInwardNoController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: gateInwardNoController),
-                                                          onChanged: (value){
-
-                                                          },
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Gate Inward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                         ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const SizedBox(height: 15,),
-                                                        const Text("Entry Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          readOnly: true,
-                                                          controller: entryDateController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: entryDateController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                          // onTap: () {
-                                                          //   selectEntryDate(context);
-                                                          // },
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const SizedBox(height: 15,),
-                                                        const Text("Entry Time",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          readOnly: true,
-                                                          controller: entryTimeController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: entryTimeController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                          // onTap: () {
-                                                          //   selectTime(context);
-                                                          // },
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        // const SizedBox(height: 15,),
-                                                        const Text("Plant",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          // autofocus: true,
-                                                          controller: plantController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: plantController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                        ),
-                                                        const SizedBox(height: 15,),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const Text("Vehicle Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          // autofocus: true,
-                                                          controller: vehicleNoController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: vehicleNoController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                        ),
-                                                        const SizedBox(height: 15,),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const Text("Vehicle In-Time",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          // autofocus: true,
-                                                          controller: vehicleInTimeController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: vehicleInTimeController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                          onTap: () {
-                                                            selectVehicleInTime(context);
-                                                          },
-                                                        ),
-                                                        const SizedBox(height: 15,),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width/1.2,
-                                child: Card(
-                                  color: Colors.white,
-                                  surfaceTintColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                    side: BorderSide(
-                                        color: mTextFieldBorder.withOpacity(0.8),
-                                        width: 1
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(
-                                        height: 40,
-                                        child: Padding(
-                                          padding: EdgeInsets.only(left: 26,top: 10,right: 0),
-                                          child: Text("Supplier Details", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold,fontSize: 12)),
-                                        ),
-                                      ),
-                                      const Divider(color: mTextFieldBorder,height: 1),
-                                      Padding(
-                                          padding: const EdgeInsets.only(left: 18,top: 0,right: 18),
-                                        child: Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const SizedBox(height: 10,),
-                                                        const Text("Supplier Code",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
                                                         SizedBox(
                                                           height: 30,
-                                                          child: TextField(
+                                                          width: 200,
+                                                          child: TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            controller: supplierCodeController,
                                                             readOnly: true,
-                                                            decoration:  const InputDecoration(
-                                                                hintText: " Select Supplier",
+                                                            controller: gateInwardNoController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: gateInwardNoController),
+                                                            onChanged: (value){
+
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Entry Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child: TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            readOnly: true,
+                                                            controller: entryDateController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: entryDateController),
+                                                            onChanged: (value){
+
+                                                            },
+                                                            onTap: () {
+                                                              selectEntryDate(context);
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Entry Time",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child: TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            // readOnly: true,
+                                                            controller: entryTimeController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: entryTimeController),
+                                                            onChanged: (value){
+
+                                                            },
+                                                            onTap: () {
+                                                              selectTime(context);
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Plant",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child: TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            // autofocus: true,
+                                                            controller: plantController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: plantController),
+                                                            onChanged: (value){
+
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Vehicle Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child: TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            // autofocus: true,
+                                                            controller: vehicleNoController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: vehicleNoController),
+                                                            onChanged: (value){
+
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Vehicle In-Time",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child: TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            // autofocus: true,
+                                                            controller: vehicleInTimeController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: vehicleInTimeController),
+                                                            onChanged: (value){
+
+                                                            },
+                                                            onTap: () {
+                                                              selectVehicleInTime(context);
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Column(
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child: SizedBox(
+                                                            height: 30,
+                                                            child: TextFormField(
+                                                              style: const TextStyle(fontSize: 11),
+                                                              readOnly: true,
+                                                              autofocus: true,
+                                                              controller: supplierNameController,
+                                                              decoration:  const InputDecoration(
+                                                                hintText: " Select Supplier Name",
                                                                 hintStyle: TextStyle(fontSize: 11,),
                                                                 border: OutlineInputBorder(
                                                                     borderSide: BorderSide(color:  Colors.blue)
                                                                 ),
-                                                              contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
+                                                                contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
                                                                 suffixIcon: Icon(
                                                                   Icons.arrow_drop_down_outlined,
                                                                   color: Colors.blue,size: 16,
                                                                 ),
                                                                 enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
                                                                 focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-                                                            ),
-                                                            onTap: () {
-                                                              showDialog(
-                                                                context: context,
-                                                                builder: (context) => _showSupplierDialog(),
-                                                              ).then((value) {
-                                                                setState(() {
-                                                                  loading = false;
-                                                                  supplierCodeController.text = value;
+                                                              ),
+                                                              onChanged: (value){
+
+                                                              },
+                                                              onTap: () {
+                                                                showDialog(
+                                                                  context: context,
+                                                                  builder: (context) => _showSupplierNameDialog(),
+                                                                ).then((value) {
+                                                                  setState(() {
+                                                                    loading = false;
+                                                                    supplierNameController.text = value["name"];
+                                                                    supplierCodeController.text = value["code"];
+                                                                    print('-------- supplier name then ----------');
+                                                                    print(supplierNameController.text);
+                                                                    print(supplierCodeController.text);
+                                                                    print(poNoList);
+                                                                  });
+                                                                  getPOData(value["code"]);
                                                                 });
-                                                                getPOData(value);
-                                                              });
+                                                              },
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Supplier Code",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child: SizedBox(
+                                                            height: 30,
+                                                            child: TextField(
+                                                              style: const TextStyle(fontSize: 11),
+                                                              controller: supplierCodeController,
+                                                              readOnly: true,
+                                                              decoration:  const InputDecoration(
+                                                                hintText: " Select Supplier",
+                                                                hintStyle: TextStyle(fontSize: 11,),
+                                                                border: OutlineInputBorder(
+                                                                    borderSide: BorderSide(color:  Colors.blue)
+                                                                ),
+                                                                contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
+                                                                suffixIcon: Icon(
+                                                                  Icons.arrow_drop_down_outlined,
+                                                                  color: Colors.blue,size: 16,
+                                                                ),
+                                                                enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
+                                                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                                              ),
+                                                              onTap: () {
+                                                                showDialog(
+                                                                  context: context,
+                                                                  builder: (context) => _showSupplierDialog(),
+                                                                ).then((value) {
+                                                                  setState(() {
+                                                                    loading = false;
+                                                                    supplierCodeController.text = value;
+                                                                  });
+                                                                  getPOData(value);
+                                                                });
+                                                              },
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Purchase Order No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child:SizedBox(
+                                                            height: 30,
+                                                            child: TextFormField(
+                                                              style: const TextStyle(fontSize: 11),
+                                                              readOnly: true,
+                                                              controller: purchaseOrderController,
+                                                              decoration: const InputDecoration(
+                                                                hintText: " Select Purchase Order Number",
+                                                                hintStyle: TextStyle(fontSize: 11,),
+                                                                border: OutlineInputBorder(
+                                                                    borderSide: BorderSide(color:  Colors.blue)
+                                                                ),
+                                                                contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
+                                                                suffixIcon: Icon(
+                                                                  Icons.arrow_drop_down_outlined,
+                                                                  color: Colors.blue,size: 16,
+                                                                ),
+                                                                enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
+                                                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                                              ),
+                                                              onTap: () {
+                                                                showDialog(
+                                                                  context: context,
+                                                                  builder: (context) => _showPODialog(),
+                                                                ).then((value) {
+                                                                  setState(() {
+                                                                    loading = false;
+                                                                    purchaseOrderController.text = value;
+                                                                  });
+                                                                });
+                                                              },
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("PO Type",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child:TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            autofocus: true,
+                                                            controller: poTypeController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: poTypeController),
+                                                            onChanged: (value){
+
                                                             },
                                                           ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
+                                                  Padding(
                                                     padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                    child: Row(
                                                       children: [
-                                                        const SizedBox(height: 10,),
-                                                        const Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Invoice No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
                                                         SizedBox(
                                                           height: 30,
-                                                          child: TextFormField(
+                                                          width: 200,
+                                                          child:TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            readOnly: true,
                                                             autofocus: true,
-                                                            controller: supplierNameController,
-                                                            decoration:  const InputDecoration(
-                                                              hintText: " Select Supplier Name",
-                                                              hintStyle: TextStyle(fontSize: 11,),
-                                                              border: OutlineInputBorder(
-                                                                  borderSide: BorderSide(color:  Colors.blue)
-                                                              ),
-                                                              contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
-                                                              suffixIcon: Icon(
-                                                                Icons.arrow_drop_down_outlined,
-                                                                color: Colors.blue,size: 16,
-                                                              ),
-                                                              enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
-                                                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-                                                            ),
+                                                            controller: invoiceNoController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: invoiceNoController),
+                                                            onChanged: (value){
+
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Invoice Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child:TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            autofocus: true,
+                                                            controller: invoiceDateController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: invoiceDateController),
                                                             onChanged: (value){
 
                                                             },
                                                             onTap: () {
-                                                              showDialog(
-                                                                context: context,
-                                                                builder: (context) => _showSupplierNameDialog(),
-                                                              ).then((value) {
-                                                                setState(() {
-                                                                  loading = false;
-                                                                  supplierNameController.text = value["name"];
-                                                                  supplierCodeController.text = value["code"];
-                                                                  print('-------- supplier name then ----------');
-                                                                  print(supplierNameController.text);
-                                                                  print(supplierCodeController.text);
-                                                                  print(poNoList);
-                                                                });
-                                                                getPOData(value["code"]);
-                                                              });
+                                                              selectInvoiceDate(context);
                                                             },
                                                           ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
+                                                ],
+                                              ),
+                                              Column(
+                                                children: [
+                                                  Padding(
                                                     padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                    child: Row(
                                                       children: [
-                                                        const Text("Invoice No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
-                                                          controller: invoiceNoController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: invoiceNoController),
-                                                          onChanged: (value){
-
-                                                          },
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Entered By",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                         ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const Text("Invoice Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
-                                                          controller: invoiceDateController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: invoiceDateController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                          onTap: () {
-                                                            selectInvoiceDate(context);
-                                                          },
-                                                        ),
-                                                        const SizedBox(height: 10,),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const Text("Purchase Order No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
                                                         SizedBox(
                                                           height: 30,
-                                                          child: TextFormField(
+                                                          width: 200,
+                                                          child:TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            readOnly: true,
-                                                            controller: purchaseOrderController,
-                                                            decoration: const InputDecoration(
-                                                              hintText: " Select Supplier",
-                                                              hintStyle: TextStyle(fontSize: 11,),
-                                                              border: OutlineInputBorder(
-                                                                  borderSide: BorderSide(color:  Colors.blue)
-                                                              ),
-                                                              contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
-                                                              suffixIcon: Icon(
-                                                                Icons.arrow_drop_down_outlined,
-                                                                color: Colors.blue,size: 16,
-                                                              ),
-                                                              enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
-                                                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-                                                            ),
-                                                            onTap: () {
-                                                              showDialog(
-                                                                context: context,
-                                                                builder: (context) => _showPODialog(),
-                                                              ).then((value) {
-                                                                setState(() {
-                                                                  loading = false;
-                                                                  purchaseOrderController.text = value;
-                                                                });
-                                                              });
+                                                            autofocus: true,
+                                                            controller: enteredByController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: enteredByController),
+                                                            onChanged: (value){
+
                                                             },
                                                           ),
                                                         ),
-                                                        const SizedBox(height: 10,),
                                                       ],
                                                     ),
                                                   ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
+                                                  Padding(
                                                     padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                    child: Row(
                                                       children: [
-                                                        const Text("PO Type",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
-                                                          controller: poTypeController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: poTypeController),
-                                                          onChanged: (value){
-
-                                                          },
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                         ),
-                                                        const SizedBox(height: 10,),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child:SizedBox(
+                                                            height: 30,
+                                                            child: Focus(
+                                                                skipTraversal: true,
+                                                                descendantsAreFocusable: true,
+                                                                child: LayoutBuilder(
+                                                                  builder: (BuildContext context, BoxConstraints constraints) {
+                                                                    return CustomPopupMenuButton(
+                                                                      decoration: customPopupDecoration(hintText:canceledValue1,),
+                                                                      itemBuilder: (BuildContext context) {
+                                                                        return canceledPopUpList;
+                                                                      },
+                                                                      hintText: "",
+                                                                      childWidth: constraints.maxWidth,
+                                                                      textController: canceledController,
+                                                                      shape:  const RoundedRectangleBorder(
+                                                                        side: BorderSide(color: mTextFieldBorder),
+                                                                        borderRadius: BorderRadius.all(
+                                                                          Radius.circular(5),
+                                                                        ),
+                                                                      ),
+                                                                      offset: const Offset(1, 40),
+                                                                      tooltip: '',
+                                                                      onSelected: ( value) {
+                                                                        setState(() {
+                                                                          canceledValue1 = value;
+                                                                          canceledController.text = value;
+                                                                        });
+                                                                      },
+                                                                      onCanceled: () {
+
+                                                                      },
+                                                                      child: Container(),
+                                                                    );
+                                                                  },
+                                                                )
+                                                            ),
+                                                          ),
+                                                        ),
                                                       ],
                                                     ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width/1.2,
-                                child: Card(
-                                  color: Colors.white,
-                                  surfaceTintColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                    side: BorderSide(
-                                        color: mTextFieldBorder.withOpacity(0.8),
-                                        width: 1
+                                      ],
                                     ),
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(
-                                        height: 40,
-                                        child: Padding(
-                                          padding: EdgeInsets.only(left: 26,top: 10,right: 0),
-                                          child: Text("Security Details", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold,fontSize: 12)),
-                                        ),
+                                ),
+                                SizedBox(
+                                  width: 1100,
+                                  child: Card(
+                                    color: Colors.white,
+                                    surfaceTintColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                      side: BorderSide(
+                                          color: mTextFieldBorder.withOpacity(0.8),
+                                          width: 1
                                       ),
-                                      const Divider(color: mTextFieldBorder,height: 1),
-                                      Padding(
-                                          padding: const EdgeInsets.only(left: 18,top: 0,right: 18),
-                                        child: Column(
-                                          children: [
-                                            Row(
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 18,top: 0,right: 18),
+                                      child: Row(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 10, left: 8, bottom: 10),
+                                            child: Row(
                                               children: [
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const SizedBox(height: 10,),
-                                                        const Text("Entered By",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
-                                                          controller: enteredByController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: enteredByController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
+                                                const SizedBox(
+                                                    width: 100,
+                                                    child: Text("Remarks",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                 ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const SizedBox(height: 10,),
-                                                        const Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        SizedBox(
-                                                          height: 30,
-                                                          child: Focus(
-                                                              skipTraversal: true,
-                                                              descendantsAreFocusable: true,
-                                                              child: LayoutBuilder(
-                                                                builder: (BuildContext context, BoxConstraints constraints) {
-                                                                  return CustomPopupMenuButton(
-                                                                    decoration: customPopupDecoration(hintText:canceledValue1,),
-                                                                    itemBuilder: (BuildContext context) {
-                                                                      return canceledPopUpList;
-                                                                    },
-                                                                    hintText: "",
-                                                                    childWidth: constraints.maxWidth,
-                                                                    textController: canceledController,
-                                                                    shape:  const RoundedRectangleBorder(
-                                                                      side: BorderSide(color: mTextFieldBorder),
-                                                                      borderRadius: BorderRadius.all(
-                                                                        Radius.circular(5),
-                                                                      ),
-                                                                    ),
-                                                                    offset: const Offset(1, 40),
-                                                                    tooltip: '',
-                                                                    onSelected: ( value) {
-                                                                      setState(() {
-                                                                        canceledValue1 = value;
-                                                                        canceledController.text = value;
-                                                                      });
-                                                                    },
-                                                                    onCanceled: () {
+                                                SizedBox(
+                                                  width: 400,
+                                                  child:TextFormField(
+                                                    style: const TextStyle(fontSize: 11),
+                                                    autofocus: true,
+                                                    controller: remarksController,
+                                                    minLines: 2,
+                                                    maxLines: null,
+                                                    decoration: customerFieldDecoration2(hintText: '',controller: remarksController),
+                                                    onChanged: (value){
 
-                                                                    },
-                                                                    child: Container(),
-                                                                  );
-                                                                },
-                                                              )
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 80,),
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const SizedBox(height: 10,),
-                                                        const Text("Received By",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
-                                                          controller: receivedController,
-                                                          decoration: customerFieldDecoration(hintText: '',controller: receivedController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                        ),
-                                                      ],
-                                                    ),
+                                                    },
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                            Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        const Text("Remarks",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                        const SizedBox(height: 6,),
-                                                        TextFormField(
-                                                          style: const TextStyle(fontSize: 11),
-                                                          autofocus: true,
-                                                          controller: remarksController,
-                                                          minLines: 2,
-                                                          maxLines: null,
-                                                          decoration: customerFieldDecoration2(hintText: '',controller: remarksController),
-                                                          onChanged: (value){
-
-                                                          },
-                                                        ),
-                                                        const SizedBox(height: 10,),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(child: Container())
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
+              )
+          )
         ],
       ),
     );
@@ -957,6 +932,7 @@ class _AddInwardState extends State<AddInward> {
       return null;
     }
   }
+
 
   Future<List<dynamic>?> getPOData(String supplierCode) async {
     String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/PurchaseOrder/PurchaseOrderScheduleLine?filter=OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA' and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder";
@@ -1004,7 +980,7 @@ class _AddInwardState extends State<AddInward> {
   }
 
   Future getGateInNo() async{
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY?orderby=GateInwardNo desc";
     String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
     try{
       final response = await http.get(
@@ -1014,11 +990,18 @@ class _AddInwardState extends State<AddInward> {
         },
       );
       if(response.statusCode == 200){
-        Map tempData = {};
-        tempData = json.decode(response.body);
+        Map tempData = json.decode(response.body);
+        List results = tempData['d']['results'];
 
+        if(results.isNotEmpty){
+          String firstGateInwardNo = results[0]['GateInwardNo'];
+          int nextGateInwardNo = int.parse(firstGateInwardNo) + 1;
+          gateInwardNoController.text = nextGateInwardNo.toString();
+        }
       }
-    }catch(e){}
+    }catch(e){
+      print('Error fetching GateInwardNo: $e');
+    }
   }
 
   Future<void> postInwardApi(Map tempData, BuildContext context) async {
@@ -1038,17 +1021,20 @@ class _AddInwardState extends State<AddInward> {
       if (response.statusCode == 201) {
         final jsonResponse = json.decode(response.body);
         if (jsonResponse['d'] != null && jsonResponse['d']['SAP_UUID'] != null) {
-          print('-------- post response ---------');
-          print(response.body);
+          // print('-------- post response ---------');
+          // print(response.body);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Data posted successfully'),
               duration: Duration(seconds: 2),
             ),
           );
+          setState(() {
+            loading = false;
+          });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Failed to post data'),
               duration: Duration(seconds: 2),
             ),
@@ -1059,7 +1045,7 @@ class _AddInwardState extends State<AddInward> {
         final errorMessage = errorResponse['error']['message']['value'];
         if (errorMessage.contains("Instance with the same key already exists")) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Instance with the same key already exists'),
               duration: Duration(seconds: 2),
             ),
@@ -1068,7 +1054,7 @@ class _AddInwardState extends State<AddInward> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to post data: $errorMessage'),
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -1078,7 +1064,7 @@ class _AddInwardState extends State<AddInward> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error posting data: $e'),
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -1130,6 +1116,7 @@ class _AddInwardState extends State<AddInward> {
                         },
                         child: ListTile(
                           title: Text(supplierCodeList[index]["Supplier"].toString()),
+                          subtitle: Text(supplierCodeList[index]["SupplierName"].toString()),
                         ),
                       );
                     },),
@@ -1192,6 +1179,7 @@ class _AddInwardState extends State<AddInward> {
                     },
                     child: ListTile(
                       title: Text(supplierCodeList[index]["SupplierName"].toString()),
+                      subtitle: Text(supplierCodeList[index]["Supplier"].toString()),
                     ),
                   );
                 },),
