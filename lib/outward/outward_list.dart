@@ -13,9 +13,11 @@ import '../widgets/outlined_mbutton.dart';
 class OutwardList extends StatefulWidget {
   final double drawerWidth;
   final double selectedDestination;
+  final String plantValue;
   const OutwardList({
     required this.drawerWidth,
     required this.selectedDestination,
+    required this.plantValue,
     super.key
   });
 
@@ -130,7 +132,7 @@ class _OutwardListState extends State<OutwardList> {
       ),
       body: Row(
         children: [
-          CustomDrawer(drawerWidth, widget.selectedDestination),
+          CustomDrawer(drawerWidth, widget.selectedDestination, widget.plantValue),
           const VerticalDivider(width: 1,thickness: 1),
           Expanded(
             child: Scaffold(
@@ -213,6 +215,7 @@ class _OutwardListState extends State<OutwardList> {
                                                       PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  AddOutward(
                                                         drawerWidth: widget.drawerWidth,
                                                         selectedDestination: widget.selectedDestination,
+                                                        plantValue: widget.plantValue,
                                                       ),)
                                                   );
                                                 },
@@ -480,6 +483,7 @@ class _OutwardListState extends State<OutwardList> {
                                                         drawerWidth: drawerWidth,
                                                         selectedDestination: widget.selectedDestination,
                                                       outwardList: filteredList[i],
+                                                      plantValue: widget.plantValue,
                                                     ),));
                                                   },
                                                   child: Padding(

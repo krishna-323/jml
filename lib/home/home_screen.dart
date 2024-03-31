@@ -10,9 +10,11 @@ import '../utils/custom_appbar.dart';
 class HomeScreen extends StatefulWidget {
   final double drawerWidth;
   final double selectedDestination;
+  final String plantValue;
   const HomeScreen({
     required this.drawerWidth,
     required this.selectedDestination,
+    required this.plantValue,
     super.key
   });
 
@@ -27,6 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    print('-------- home init ---------');
+    print(widget.plantValue);
   }
   @override
   Widget build(BuildContext context) {
@@ -40,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          CustomDrawer(widget.drawerWidth, widget.selectedDestination),
+          CustomDrawer(widget.drawerWidth, widget.selectedDestination, widget.plantValue),
           const VerticalDivider(width: 1,thickness: 1),
           Expanded(
               child: Scaffold(
@@ -58,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   pageBuilder: (context, animation, secondaryAnimation) =>  InwardList(
                                     drawerWidth: widget.drawerWidth,
                                     selectedDestination: 1,
+                                    plantValue: widget.plantValue,
                                   ),
                                 )
                             );
@@ -157,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  OutwardList(
                               drawerWidth: widget.drawerWidth,
                               selectedDestination: 2,
+                              plantValue: widget.plantValue,
                             ),));
                           },
                           child: Card(

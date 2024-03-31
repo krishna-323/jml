@@ -8,7 +8,8 @@ import 'jml_colors.dart';
 class CustomDrawer extends StatefulWidget {
   final double drawerWidth;
   final double selectedDestination;
-  const CustomDrawer(this.drawerWidth, this.selectedDestination, {Key? key}) : super(key: key);
+  final String plantValue;
+  const CustomDrawer(this.drawerWidth, this.selectedDestination, this.plantValue,{Key? key}) : super(key: key);
 
   @override
   State<CustomDrawer> createState() => _CustomDrawerState();
@@ -88,7 +89,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     contentPadding: const EdgeInsets.only(left: 0),
                     child: ListTile(
                       onTap: () {
-                        Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  HomeScreen(drawerWidth: widget.drawerWidth,selectedDestination: 0),));
+                        Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  HomeScreen(drawerWidth: widget.drawerWidth,selectedDestination: 0,plantValue: widget.plantValue),));
                         setState(() {
                           _selectedDestination = 0;
                         });
@@ -145,6 +146,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  InwardList(
                           selectedDestination: 1,
                           drawerWidth: widget.drawerWidth,
+                          plantValue: widget.plantValue,
                         ),));
                         // setState(() {
                         //   _selectedDestination = 1;
@@ -203,6 +205,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  OutwardList(
                           drawerWidth: widget.drawerWidth,
                           selectedDestination: 2,
+                          plantValue: widget.plantValue,
                         ),));
                       },
                       leading: const SizedBox(width: 40,child: Padding(

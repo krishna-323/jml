@@ -10,11 +10,13 @@ import '../utils/jml_colors.dart';
 class EditOutward extends StatefulWidget {
   final double drawerWidth;
   final double selectedDestination;
+  final String plantValue;
   final Map outwardList;
   const EditOutward({
     required this.drawerWidth,
     required this.selectedDestination,
     required this.outwardList,
+    required this.plantValue,
     super.key
   });
 
@@ -126,7 +128,7 @@ class _EditOutwardState extends State<EditOutward> {
       ),
       body: Row(
         children: [
-          CustomDrawer(widget.drawerWidth, widget.selectedDestination),
+          CustomDrawer(widget.drawerWidth, widget.selectedDestination, widget.plantValue),
           const VerticalDivider(width: 1,thickness: 1),
           Expanded(
             child: Scaffold(

@@ -15,9 +15,11 @@ import '../utils/jml_colors.dart';
 class AddInward extends StatefulWidget {
   final double drawerWidth;
   final double selectedDestination;
+  final String plantValue;
   const AddInward({
     required this.drawerWidth,
     required this.selectedDestination,
+    required this.plantValue,
     super.key
   });
 
@@ -185,6 +187,7 @@ class _AddInwardState extends State<AddInward> {
     formattedEntryTime = 'PT${hour}H${minute}M00S';
     getInitialData();
     canceledController.text = canceledValue1;
+    plantController.text = widget.plantValue;
   }
 
   Future getInitialData() async{
@@ -212,7 +215,7 @@ class _AddInwardState extends State<AddInward> {
       ),
       body: Row(
         children: [
-          CustomDrawer(drawerWidth, widget.selectedDestination),
+          CustomDrawer(drawerWidth, widget.selectedDestination,widget.plantValue),
           const VerticalDivider(width: 1,thickness: 1),
           Expanded(
               child: Scaffold(
@@ -266,35 +269,62 @@ class _AddInwardState extends State<AddInward> {
                                   "EnteredBy": enteredByController.text,
                                   "Remarks": remarksController.text,
                                   "Cancelled": canceledController.text,
-                                  // "ReceivedBy": receivedController.text
+                                  "ReceivedBy": poTypeController.text
                                 };
                                 print('--------- saved inward ----------');
                                 print(savedInward);
                                 BuildContext dialogContext = context;
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
+                                postInwardApi(savedInward, context).then((value) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
                                     return AlertDialog(
-                                      title: const Text('Gate Inward Confirmation'),
-                                      content: Text('GateInwardNo: ${gateInwardNoController.text}'),
+                                      title:  Text('GateInwardNo: ${gateInwardNoController.text}'),
+                                      content: const Text("Data Posted Successfully"),
                                       actions: [
                                         TextButton(
                                           onPressed: () {
                                             Navigator.of(dialogContext).pop(); // Close the dialog
-                                            postInwardApi(savedInward, dialogContext).then((value) {
-                                              Navigator.of(dialogContext).push(PageRouteBuilder(
-                                                pageBuilder: (context, animation, secondaryAnimation) => InwardList(
-                                                    drawerWidth: widget.drawerWidth,
-                                                    selectedDestination: widget.selectedDestination
-                                                ),
-                                              ));
-                                            });
+                                            Navigator.of(dialogContext).push(PageRouteBuilder(
+                                              pageBuilder: (context, animation, secondaryAnimation) => InwardList(
+                                                drawerWidth: widget.drawerWidth,
+                                                selectedDestination: widget.selectedDestination,
+                                                plantValue: widget.plantValue,
+                                              ),
+                                            ));
                                           },
                                           child: const Text('OK'),
                                         ),
                                       ],
                                     );
                                   },);
+                                });
+
+                                // showDialog(
+                                //   context: context,
+                                //   builder: (context) {
+                                //     return AlertDialog(
+                                //       title: const Text('Gate Inward Confirmation'),
+                                //       content: Text('GateInwardNo: ${gateInwardNoController.text}'),
+                                //       actions: [
+                                //         TextButton(
+                                //           onPressed: () {
+                                //             Navigator.of(dialogContext).pop(); // Close the dialog
+                                //             postInwardApi(savedInward, dialogContext).then((value) {
+                                //               Navigator.of(dialogContext).push(PageRouteBuilder(
+                                //                 pageBuilder: (context, animation, secondaryAnimation) => InwardList(
+                                //                     drawerWidth: widget.drawerWidth,
+                                //                     selectedDestination: widget.selectedDestination,
+                                //                   plantValue: widget.plantValue,
+                                //                 ),
+                                //               ));
+                                //             });
+                                //           },
+                                //           child: const Text('OK'),
+                                //         ),
+                                //       ],
+                                //     );
+                                //   },);
                               }
                             },
                             child: const Text("Save", style: TextStyle(color: Colors.white)),
@@ -446,7 +476,7 @@ class _AddInwardState extends State<AddInward> {
                                                           width: 200,
                                                           child: TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            // autofocus: true,
+                                                            readOnly: true,
                                                             controller: plantController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: plantController),
                                                             onChanged: (value){
@@ -863,7 +893,8 @@ class _AddInwardState extends State<AddInward> {
                                                     autofocus: true,
                                                     controller: remarksController,
                                                     minLines: 2,
-                                                    maxLines: null,
+                                                    maxLines: 500,
+                                                    maxLength: 500,
                                                     decoration: customerFieldDecoration2(hintText: '',controller: remarksController),
                                                     onChanged: (value){
 
@@ -1004,7 +1035,7 @@ class _AddInwardState extends State<AddInward> {
     }
   }
 
-  Future<void> postInwardApi(Map tempData, BuildContext context) async {
+  Future postInwardApi(Map tempData, BuildContext context) async {
     String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_post/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
     String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
 
@@ -1040,6 +1071,7 @@ class _AddInwardState extends State<AddInward> {
             ),
           );
         }
+        return response.body;
       } else {
         final errorResponse = json.decode(response.body);
         final errorMessage = errorResponse['error']['message']['value'];
@@ -1058,6 +1090,7 @@ class _AddInwardState extends State<AddInward> {
             ),
           );
         }
+        return response.body;
       }
     } catch (e) {
       print('Error posting data: $e');
@@ -1067,6 +1100,7 @@ class _AddInwardState extends State<AddInward> {
           duration: const Duration(seconds: 2),
         ),
       );
+      return null;
     }
   }
 

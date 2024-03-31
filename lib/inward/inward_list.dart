@@ -15,9 +15,11 @@ import '../utils/jml_colors.dart';
 class InwardList extends StatefulWidget {
   final double drawerWidth;
   final double selectedDestination;
+  final String plantValue;
   const InwardList({
     required this.drawerWidth,
     required this.selectedDestination,
+    required this.plantValue,
     super.key
   });
 
@@ -43,7 +45,10 @@ class _InwardListState extends State<InwardList> {
   late double drawerWidth;
 
   Future getInwardList()async{
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
+    // String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY?filter=Plant eq '${widget.plantValue}'&orderby=GateInwardNo desc";
+    print('--------- inward list url ------');
+    print(url);
     String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
 
     try{
@@ -74,9 +79,10 @@ class _InwardListState extends State<InwardList> {
             'VehicleIntime': formatTime(result['VehicleIntime']),
             'InvoiceNo': result['InvoiceNo'],
             'InvoiceDate': result['InvoiceDate'],
-            // 'ReceivedBy': result['ReceivedBy'],
+            'ReceivedBy': result['ReceivedBy'],
             'Cancelled': result['Cancelled'],
             'Remarks': result['Remarks'],
+            'SAP_UUID': result['SAP_UUID'],
           };
           setState(() {
             inwardList.add(inwardData);
@@ -152,7 +158,7 @@ class _InwardListState extends State<InwardList> {
       ),
       body: Row(
         children: [
-          CustomDrawer(drawerWidth, widget.selectedDestination),
+          CustomDrawer(drawerWidth, widget.selectedDestination, widget.plantValue),
           const VerticalDivider(width: 1,thickness: 1),
           Expanded(
             child: Scaffold(
@@ -236,6 +242,7 @@ class _InwardListState extends State<InwardList> {
                                                       PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  AddInward(
                                                         drawerWidth: widget.drawerWidth,
                                                         selectedDestination: widget.selectedDestination,
+                                                        plantValue: widget.plantValue,
                                                       ),)
                                                   );
                                                 },
@@ -451,12 +458,11 @@ class _InwardListState extends State<InwardList> {
                                                 MaterialButton(
                                                   hoverColor: Colors.blue[50],
                                                   onPressed: () {
-                                                    print('-------- edit -------');
-                                                    print(filteredList[i]);
                                                     Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditInward(
                                                       drawerWidth: drawerWidth,
                                                       selectedDestination: widget.selectedDestination,
                                                       inwardMap: filteredList[i],
+                                                      plantValue: widget.plantValue,
                                                     ),));
                                                   },
                                                   child: Padding(

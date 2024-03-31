@@ -16,11 +16,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
 
   final userName = TextEditingController();
+  final plantName = TextEditingController();
   bool userBool=false;
   final password = TextEditingController();
   bool showError = false;
   bool passWordColor = false;
   final FocusNode passwordFocusNode = FocusNode();
+  final FocusNode plantFocusNode = FocusNode();
   bool showHidePassword=true;
   void passwordHideAndViewFunc(){
     setState(() {
@@ -58,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Padding(
-                              padding: EdgeInsets.all(18.0),
+                              padding: const EdgeInsets.all(18.0),
                               child: Image.asset("assets/logo/jmi_logo.png"),
                             )
                           ],
@@ -75,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: Colors.blue[50],
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(28.0),
+                        padding: const EdgeInsets.only(top: 20, right: 20, bottom: 20, left: 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -102,48 +104,84 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: const TextStyle(fontSize: 12),
                                 decoration: decorationInputPassword("Password", userBool,showHidePassword,passwordHideAndViewFunc),
                                 onEditingComplete: () {
-                                  postLogin(userName, password).then((value) {
-                                    if(value){
+                                  postLogin(userName, password, plantName).then((value) {
+                                    if(value != null){
                                       Navigator.of(context).push(
                                           PageRouteBuilder(
                                             pageBuilder: (context, animation, secondaryAnimation) =>
-                                            const HomeScreen(selectedDestination: 0,drawerWidth: 190),
+                                                HomeScreen(
+                                                  selectedDestination: 0,
+                                                  drawerWidth: 190,
+                                                  plantValue: value,
+                                                ),
                                           )
                                       );
-                                    } else{
+                                    } else {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Login failed. Invalid username or password.'),
+                                        const SnackBar(
+                                          content: Text('Login failed. Invalid username, password'),
                                         ),
                                       );
                                     }
-
                                   });
                                 },
                               ),
                             ),
+                            // SizedBox(
+                            //   height: 30,
+                            //   child: TextField(
+                            //     controller: plantName,
+                            //     style: const TextStyle(fontSize: 12),
+                            //     decoration: decorationInput3("Plant Name", userBool),
+                            //     onEditingComplete: () {
+                            //       postLogin(userName, password, plantName).then((value) {
+                            //         if(value != null){
+                            //           Navigator.of(context).push(
+                            //               PageRouteBuilder(
+                            //                 pageBuilder: (context, animation, secondaryAnimation) =>
+                            //                     HomeScreen(
+                            //                       selectedDestination: 0,
+                            //                       drawerWidth: 190,
+                            //                       plantValue: value,
+                            //                     ),
+                            //               )
+                            //           );
+                            //         } else {
+                            //           ScaffoldMessenger.of(context).showSnackBar(
+                            //             const SnackBar(
+                            //               content: Text('Login failed. Invalid username, password, or plant.'),
+                            //             ),
+                            //           );
+                            //         }
+                            //       });
+                            //     },
+                            //   ),
+                            // ),
                             Container(
                               decoration: const BoxDecoration(
                                 borderRadius: BorderRadius.all(Radius.circular(10)),
                                 color: Color(0xff00004d),
                               ),
                               child: TextButton(onPressed: () {
-                               postLogin(userName, password).then((value) {
-                                 if(value){
+                               postLogin(userName, password, plantName).then((value) {
+                                 if(value != null){
                                    Navigator.of(context).push(
                                        PageRouteBuilder(
                                          pageBuilder: (context, animation, secondaryAnimation) =>
-                                         const HomeScreen(selectedDestination: 0,drawerWidth: 190),
+                                          HomeScreen(
+                                             selectedDestination: 0,
+                                             drawerWidth: 190,
+                                           plantValue: value,
+                                         ),
                                        )
                                    );
-                                 } else{
+                                 } else {
                                    ScaffoldMessenger.of(context).showSnackBar(
-                                     SnackBar(
-                                       content: Text('Login failed. Invalid username or password.'),
+                                     const SnackBar(
+                                       content: Text('Login failed. Invalid username, password.'),
                                      ),
                                    );
                                  }
-                                 
                                });
                               },
                                   child: const Text("Login",style:  TextStyle(color: Colors.white,),)),
@@ -162,20 +200,17 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future postLogin(TextEditingController userName, TextEditingController password) async{
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/login";
+  Future postLogin(TextEditingController userName, TextEditingController password, TextEditingController plant) async{
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_USERCRED_CDS/YY1_USERCRED?filter=UserName eq '${userName.text}' and Password eq '${password.text}'";
+    print('------- login url ---------');
+    print(url);
     String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
     try{
-      final response = await http.post(
+      final response = await http.get(
         Uri.parse(url),
         headers: {
-          "Content-Type": "application/json",
           'Authorization': authToken,
         },
-          body: json.encode({
-            "password": password.text,
-            "username": userName.text
-          })
       );
 
       if (response.statusCode == 200) {
@@ -184,30 +219,25 @@ class _LoginScreenState extends State<LoginScreen> {
           responseData= jsonDecode(response.body);
           print('------- login ----------');
           print(responseData);
-          if(responseData.containsKey("status")){
-            if (responseData['status'] == 'success') {
-              print("Login successful!");
-              return true;
-            } else {
-              print("Login failed: ${responseData['message']}");
-              return false;
-            }
-          }else {
-            print("Error: 'status' key not found in response data");
-            return false;
+          if(responseData.containsKey("d") && responseData["d"]["results"].isNotEmpty){
+            String plantValue = responseData["d"]["results"][0]["Plant"];
+            return plantValue;
+          } else {
+            print("Login failed: No user found");
+            return null;
           }
         }
         catch(e){
           log(response.body);
-          return false;
+          return null;
         }
       } else {
         print("Error: ${response.statusCode}");
-        return false;
+        return null;
       }
     }catch(e){
       print("Exception during login: $e");
-      return false;
+      return null;
     }
   }
   decorationInput3(String hintString, bool val,) {
@@ -249,4 +279,5 @@ class _LoginScreenState extends State<LoginScreen> {
 
     );
   }
+
 }
