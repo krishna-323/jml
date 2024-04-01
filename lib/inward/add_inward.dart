@@ -41,12 +41,14 @@ class _AddInwardState extends State<AddInward> {
   final vehicleInTimeController = TextEditingController();
   final supplierCodeController = TextEditingController();
   final invoiceNoController = TextEditingController();
+  final referenceNoController = TextEditingController();
   final supplierNameController = TextEditingController();
   final invoiceDateController = TextEditingController();
   final purchaseOrderController = TextEditingController();
   final poTypeController = TextEditingController();
   final enteredByController = TextEditingController();
   final canceledController = TextEditingController();
+  final typeController = TextEditingController();
   final receivedController = TextEditingController();
   final remarksController = TextEditingController();
   final searchSupplierCodeController = TextEditingController();
@@ -56,6 +58,7 @@ class _AddInwardState extends State<AddInward> {
 
   String dropdownValue1 = "";
   String canceledValue1 = "NO";
+  String typeValue1 = "";
   List supplierCodeList = [];
   List<dynamic> poNoList = [];
   List suppliers = [];
@@ -65,23 +68,6 @@ class _AddInwardState extends State<AddInward> {
   List<Map<String, dynamic>> uniquePurchaseOrder = [];
   List<dynamic> purchaseOrders = [];
 
-  List<CustomPopupMenuEntry<String>> supplierCodePopUpList = <CustomPopupMenuEntry<String>>[
-    const CustomPopupMenuItem(
-      height: 40,
-      value: 'S123',
-      child: Center(child: SizedBox(width: 350,child: Text('S123',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
-    ),
-    const CustomPopupMenuItem(
-      height: 40,
-      value: 'S456',
-      child: Center(child: SizedBox(width: 350,child: Text('S456',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
-    ),
-    const CustomPopupMenuItem(
-      height: 40,
-      value: 'S789',
-      child: Center(child: SizedBox(width: 350,child: Text('S789',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
-    ),
-  ];
   List<CustomPopupMenuEntry<String>> canceledPopUpList = <CustomPopupMenuEntry<String>>[
     const CustomPopupMenuItem(
       height: 40,
@@ -92,6 +78,18 @@ class _AddInwardState extends State<AddInward> {
       height: 40,
       value: 'No',
       child: Center(child: SizedBox(width: 350,child: Text('NO',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
+    ),
+  ];
+  List<CustomPopupMenuEntry<String>> typePopUpList = <CustomPopupMenuEntry<String>>[
+    const CustomPopupMenuItem(
+      height: 40,
+      value: 'Customer',
+      child: Center(child: SizedBox(width: 350,child: Text('Customer',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
+    ),
+    const CustomPopupMenuItem(
+      height: 40,
+      value: 'Supplier',
+      child: Center(child: SizedBox(width: 350,child: Text('Supplier',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
     ),
   ];
 
@@ -170,7 +168,9 @@ class _AddInwardState extends State<AddInward> {
     print('-------- invoice data -------');
     print(invoiceDateTime);
   }
-
+  String _formatTime(TimeOfDay time) {
+    return 'PT${time.hour}H${time.minute}M00S';
+  }
   @override
   void initState() {
     // TODO: implement initState
@@ -178,13 +178,18 @@ class _AddInwardState extends State<AddInward> {
     super.initState();
     entryDateController.text = DateFormat("dd-MM-yyyy").format(DateTime.now());
     entryTimeController.text = DateFormat('hh:mm a').format(DateTime.now());
+    print('------ add init entry time ---------');
+    print(entryTimeController.text);
     getGateInNo();
     String entryDate = DateFormat("yyyy-MM-dd").format(DateTime.now());
     entryDateTime = "${entryDate}T00:00:00";
-    List<String> timeComponents = entryTimeController.text.split(':');
-    int hour = int.parse(timeComponents[0]);
-    int minute = int.parse(timeComponents[1].split(' ')[0]);
-    formattedEntryTime = 'PT${hour}H${minute}M00S';
+    // List<String> timeComponents = entryTimeController.text.split(':');
+    // int hour = int.parse(timeComponents[0]);
+    // int minute = int.parse(timeComponents[1].split(' ')[0]);
+    // formattedEntryTime = 'PT${hour}H${minute}M00S';
+    formattedEntryTime = _formatTime(TimeOfDay.now());
+    print('------ add init formattedEntryTime ---------');
+    print(formattedEntryTime);
     getInitialData();
     canceledController.text = canceledValue1;
     plantController.text = widget.plantValue;
@@ -253,7 +258,10 @@ class _AddInwardState extends State<AddInward> {
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Number")));
                               } else if (vehicleInTimeController.text.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle In-Time")));
-                              } else {
+                              } else if(purchaseOrderController.text.isEmpty){
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter PO Number")));
+                              }
+                              else {
                                 Map savedInward = {
                                   "GateInwardNo": gateInwardNoController.text,
                                   "EntryDate": entryDateTime,
@@ -269,7 +277,9 @@ class _AddInwardState extends State<AddInward> {
                                   "EnteredBy": enteredByController.text,
                                   "Remarks": remarksController.text,
                                   "Cancelled": canceledController.text,
-                                  "ReceivedBy": poTypeController.text
+                                  "ReceivedBy": poTypeController.text,
+                                  "SAP_Description": typeController.text,
+                                  "ReceivedBy1": referenceNoController.text
                                 };
                                 print('--------- saved inward ----------');
                                 print(savedInward);
@@ -428,9 +438,9 @@ class _AddInwardState extends State<AddInward> {
                                                             onChanged: (value){
 
                                                             },
-                                                            onTap: () {
-                                                              selectEntryDate(context);
-                                                            },
+                                                            // onTap: () {
+                                                            //   selectEntryDate(context);
+                                                            // },
                                                           ),
                                                         ),
                                                       ],
@@ -455,9 +465,9 @@ class _AddInwardState extends State<AddInward> {
                                                             onChanged: (value){
 
                                                             },
-                                                            onTap: () {
-                                                              selectTime(context);
-                                                            },
+                                                            // onTap: () {
+                                                            //   selectTime(context);
+                                                            // },
                                                           ),
                                                         ),
                                                       ],
@@ -782,7 +792,60 @@ class _AddInwardState extends State<AddInward> {
                                                       children: [
                                                         const SizedBox(
                                                             width: 100,
-                                                            child: Text("Entered By",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                            child: Text("Type",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child:SizedBox(
+                                                            height: 30,
+                                                            child: Focus(
+                                                                skipTraversal: true,
+                                                                descendantsAreFocusable: true,
+                                                                child: LayoutBuilder(
+                                                                  builder: (BuildContext context, BoxConstraints constraints) {
+                                                                    return CustomPopupMenuButton(
+                                                                      decoration: customPopupDecoration(hintText:typeValue1,),
+                                                                      itemBuilder: (BuildContext context) {
+                                                                        return typePopUpList;
+                                                                      },
+                                                                      hintText: "",
+                                                                      childWidth: constraints.maxWidth,
+                                                                      textController: typeController,
+                                                                      shape:  const RoundedRectangleBorder(
+                                                                        side: BorderSide(color: mTextFieldBorder),
+                                                                        borderRadius: BorderRadius.all(
+                                                                          Radius.circular(5),
+                                                                        ),
+                                                                      ),
+                                                                      offset: const Offset(1, 40),
+                                                                      tooltip: '',
+                                                                      onSelected: ( value) {
+                                                                        setState(() {
+                                                                          typeValue1 = value;
+                                                                          typeController.text = value;
+                                                                        });
+                                                                      },
+                                                                      onCanceled: () {
+
+                                                                      },
+                                                                      child: Container(),
+                                                                    );
+                                                                  },
+                                                                )
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Reference No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                         ),
                                                         SizedBox(
                                                           height: 30,
@@ -790,8 +853,8 @@ class _AddInwardState extends State<AddInward> {
                                                           child:TextFormField(
                                                             style: const TextStyle(fontSize: 11),
                                                             autofocus: true,
-                                                            controller: enteredByController,
-                                                            decoration: customerFieldDecoration(hintText: '',controller: enteredByController),
+                                                            controller: referenceNoController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: referenceNoController),
                                                             onChanged: (value){
 
                                                             },
@@ -876,8 +939,32 @@ class _AddInwardState extends State<AddInward> {
                                     ),
                                     child: Padding(
                                       padding: const EdgeInsets.only(left: 18,top: 0,right: 18),
-                                      child: Row(
+                                      child: Column(
                                         children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: Row(
+                                              children: [
+                                                const SizedBox(
+                                                    width: 100,
+                                                    child: Text("Entered By",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                ),
+                                                SizedBox(
+                                                  height: 30,
+                                                  width: 200,
+                                                  child:TextFormField(
+                                                    style: const TextStyle(fontSize: 11),
+                                                    autofocus: true,
+                                                    controller: enteredByController,
+                                                    decoration: customerFieldDecoration(hintText: '',controller: enteredByController),
+                                                    onChanged: (value){
+
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                           Padding(
                                             padding: const EdgeInsets.only(top: 10, left: 8, bottom: 10),
                                             child: Row(

@@ -51,10 +51,14 @@ class _EditInwardState extends State<EditInward> {
   final searchSupplierCodeController = TextEditingController();
   final searchSupplierNameController = TextEditingController();
   final searchPONoController = TextEditingController();
+  final referenceNoController = TextEditingController();
+  final typeController = TextEditingController();
   late double drawerWidth;
+  String sapUuid = "";
 
   String dropdownValue1 = "";
   String canceledValue1 = "NO";
+  String typeValue1 = "";
   List supplierCodeList = [];
   List<dynamic> poNoList = [];
   List suppliers = [];
@@ -63,23 +67,6 @@ class _EditInwardState extends State<EditInward> {
   List<dynamic> displayData =[];
   List<Map<String, dynamic>> uniquePurchaseOrder = [];
   List<dynamic> purchaseOrders = [];
-  List<CustomPopupMenuEntry<String>> supplierCodePopUpList = <CustomPopupMenuEntry<String>>[
-    const CustomPopupMenuItem(
-      height: 40,
-      value: 'S123',
-      child: Center(child: SizedBox(width: 350,child: Text('S123',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
-    ),
-    const CustomPopupMenuItem(
-      height: 40,
-      value: 'S456',
-      child: Center(child: SizedBox(width: 350,child: Text('S456',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
-    ),
-    const CustomPopupMenuItem(
-      height: 40,
-      value: 'S789',
-      child: Center(child: SizedBox(width: 350,child: Text('S789',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
-    ),
-  ];
   List<CustomPopupMenuEntry<String>> canceledPopUpList = <CustomPopupMenuEntry<String>>[
     const CustomPopupMenuItem(
       height: 40,
@@ -92,33 +79,60 @@ class _EditInwardState extends State<EditInward> {
       child: Center(child: SizedBox(width: 350,child: Text('No',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
     ),
   ];
-
+  List<CustomPopupMenuEntry<String>> typePopUpList = <CustomPopupMenuEntry<String>>[
+    const CustomPopupMenuItem(
+      height: 40,
+      value: 'Customer',
+      child: Center(child: SizedBox(width: 350,child: Text('Customer',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
+    ),
+    const CustomPopupMenuItem(
+      height: 40,
+      value: 'Supplier',
+      child: Center(child: SizedBox(width: 350,child: Text('Supplier',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
+    ),
+  ];
   TimeOfDay _time = TimeOfDay.now();
   TimeOfDay _time2 = TimeOfDay.now();
   late TimeOfDay picked;
   late TimeOfDay picked2;
+  late String entryDateTime;
+  late String invoiceDateTime;
+  late String formattedTime ;
+  late String formattedEntryTime ;
+  late String formattedVehicleTime ;
   Future<void> selectTime(BuildContext context)async{
     picked = (await showTimePicker(
         context: context,
         initialTime: _time
     ))!;
-    setState(() {
-      _time = picked;
-      String formattedTime = DateFormat('hh:mm a').format(DateTime(0, 0, 0, picked.hour, picked.minute));
-      entryTimeController.text = formattedTime;
-    });
+    if(picked !=null){
+      setState(() {
+        _time = picked;
+        int hour = picked.hour;
+        int minute = picked.minute;
+        formattedEntryTime = 'PT${hour}H${minute}M00S';
+        String formattedTime = DateFormat('hh:mm a').format(DateTime(0, 0, 0, hour, minute));
+        entryTimeController.text = formattedTime;
+      });
+    }
   }
   Future<void> selectVehicleInTime(BuildContext context)async{
     picked2 = (await showTimePicker(
         context: context,
         initialTime: _time2
     ))!;
-    setState(() {
-      _time2 = picked2;
-      String formattedTime = DateFormat('hh:mm a').format(DateTime(0, 0, 0, picked2.hour, picked2.minute));
-      vehicleInTimeController.text = formattedTime;
-    });
+    if (picked2 != null) {
+      setState(() {
+        _time2 = picked2;
+        int hour = picked2.hour;
+        int minute = picked2.minute;
+        formattedVehicleTime = 'PT${hour}H${minute}M00S';
+        String formattedTime = DateFormat('hh:mm a').format(DateTime(0, 0, 0, hour, minute));
+        vehicleInTimeController.text = formattedTime;
+      });
+    }
   }
+
   selectEntryDate(BuildContext context) async{
     DateTime? pickedDate = await showDatePicker(
         context: context,
@@ -131,6 +145,10 @@ class _EditInwardState extends State<EditInward> {
     }
     String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
     entryDateController.text = formattedDate;
+    entryDateTime = DateFormat("yyyy-MM-dd").format(pickedDate) + "T00:00:00";
+    print('-------- entry date -------');
+    print(entryDateTime);
+    print(entryDateController.text);
   }
   selectInvoiceDate(BuildContext context) async{
     DateTime? pickedDate = await showDatePicker(
@@ -144,6 +162,9 @@ class _EditInwardState extends State<EditInward> {
     }
     String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
     invoiceDateController.text = formattedDate;
+    invoiceDateTime = DateFormat("yyyy-MM-dd").format(pickedDate) + "T00:00:00";
+    print('-------- invoice data -------');
+    print(invoiceDateTime);
   }
   String _formatDate(String dateString) {
     try {
@@ -162,8 +183,11 @@ class _EditInwardState extends State<EditInward> {
     drawerWidth = 60.0;
     super.initState();
     print('-------- edit inward init ---------');
-    print(widget.inwardMap['SAP_UUID']);
+    sapUuid = widget.inwardMap['SAP_UUID'];
+    print(sapUuid);
     print(widget.inwardMap);
+    String entryDate = DateFormat("yyyy-MM-dd").format(DateTime.now());
+    entryDateTime = "${entryDate}T00:00:00";
     gateInwardNoController.text = widget.inwardMap['GateInwardNo']??"";
     plantController.text = widget.inwardMap['Plant']??"";
     entryDateController.text = _formatDate(widget.inwardMap['EntryDate']??"");
@@ -180,6 +204,8 @@ class _EditInwardState extends State<EditInward> {
     canceledController.text = widget.inwardMap['Cancelled']??"";
     // receivedController.text = widget.inwardMap['ReceivedBy']??"";
     remarksController.text = widget.inwardMap['Remarks']??"";
+    typeController.text = widget.inwardMap['SAP_Description']??"";
+    referenceNoController.text = widget.inwardMap['ReceivedBy1']??"";
 
     getInitialData();
   }
@@ -236,6 +262,22 @@ class _EditInwardState extends State<EditInward> {
                           child: MaterialButton(
                             color: Colors.blue,
                             onPressed: () {
+                              // String entryTime = entryTimeController.text;
+                              // DateTime entryTimeDateTime = DateFormat.jm().parse(entryTime);
+                              // String formattedEntryTime = "PT${entryTimeDateTime.hour}H${entryTimeDateTime.minute}M00S";
+                              //
+                              // String vehicleInTime = vehicleInTimeController.text;
+                              // DateTime vehicleInTimeDateTime = DateFormat.jm().parse(vehicleInTime);
+                              // String formattedVehicleInTime = "PT${vehicleInTimeDateTime.hour}H${vehicleInTimeDateTime.minute}M00S";
+                              //
+                              // String entryDate = entryDateController.text;
+                              // DateTime entryDateDateTime = DateFormat("dd-MM-yyyy").parse(entryDate);
+                              // String formattedEntryDate = "/Date(${entryDateDateTime.millisecondsSinceEpoch})/";
+                              //
+                              // String invoiceDate = invoiceDateController.text;
+                              // DateTime invoiceDateDateTime = DateFormat("dd-MM-yyyy").parse(invoiceDate);
+                              // String formattedInvoiceDate = "/Date(${invoiceDateDateTime.millisecondsSinceEpoch})/";
+
                               Map editInward = {
                                 "gateInwardNo": gateInwardNoController.text,
                                 "entryDate": entryDateController.text,
@@ -356,9 +398,9 @@ class _EditInwardState extends State<EditInward> {
                                                             onChanged: (value){
 
                                                             },
-                                                            onTap: () {
-                                                              selectEntryDate(context);
-                                                            },
+                                                            // onTap: () {
+                                                            //   selectEntryDate(context);
+                                                            // },
                                                           ),
                                                         ),
                                                       ],
@@ -377,15 +419,15 @@ class _EditInwardState extends State<EditInward> {
                                                           width: 200,
                                                           child: TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            // readOnly: true,
+                                                            readOnly: true,
                                                             controller: entryTimeController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: entryTimeController),
                                                             onChanged: (value){
 
                                                             },
-                                                            onTap: () {
-                                                              selectTime(context);
-                                                            },
+                                                            // onTap: () {
+                                                            //   selectTime(context);
+                                                            // },
                                                           ),
                                                         ),
                                                       ],
@@ -404,7 +446,7 @@ class _EditInwardState extends State<EditInward> {
                                                           width: 200,
                                                           child: TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            // autofocus: true,
+                                                            readOnly: true,
                                                             controller: plantController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: plantController),
                                                             onChanged: (value){
@@ -428,7 +470,7 @@ class _EditInwardState extends State<EditInward> {
                                                           width: 200,
                                                           child: TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            // autofocus: true,
+                                                            readOnly: true,
                                                             controller: vehicleNoController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: vehicleNoController),
                                                             onChanged: (value){
@@ -452,15 +494,15 @@ class _EditInwardState extends State<EditInward> {
                                                           width: 200,
                                                           child: TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            // autofocus: true,
+                                                            readOnly: true,
                                                             controller: vehicleInTimeController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: vehicleInTimeController),
                                                             onChanged: (value){
 
                                                             },
-                                                            onTap: () {
-                                                              selectVehicleInTime(context);
-                                                            },
+                                                            // onTap: () {
+                                                            //   selectVehicleInTime(context);
+                                                            // },
                                                           ),
                                                         ),
                                                       ],
@@ -486,7 +528,7 @@ class _EditInwardState extends State<EditInward> {
                                                             child: TextFormField(
                                                               style: const TextStyle(fontSize: 11),
                                                               readOnly: true,
-                                                              autofocus: true,
+                                                              // autofocus: true,
                                                               controller: supplierNameController,
                                                               decoration:  const InputDecoration(
                                                                 hintText: " Select Supplier Name",
@@ -505,23 +547,23 @@ class _EditInwardState extends State<EditInward> {
                                                               onChanged: (value){
 
                                                               },
-                                                              onTap: () {
-                                                                showDialog(
-                                                                  context: context,
-                                                                  builder: (context) => _showSupplierNameDialog(),
-                                                                ).then((value) {
-                                                                  setState(() {
-                                                                    loading = false;
-                                                                    supplierNameController.text = value["name"];
-                                                                    supplierCodeController.text = value["code"];
-                                                                    print('-------- supplier name then ----------');
-                                                                    print(supplierNameController.text);
-                                                                    print(supplierCodeController.text);
-                                                                    print(poNoList);
-                                                                  });
-                                                                  getPOData(value["code"]);
-                                                                });
-                                                              },
+                                                              // onTap: () {
+                                                              //   showDialog(
+                                                              //     context: context,
+                                                              //     builder: (context) => _showSupplierNameDialog(),
+                                                              //   ).then((value) {
+                                                              //     setState(() {
+                                                              //       loading = false;
+                                                              //       supplierNameController.text = value["name"];
+                                                              //       supplierCodeController.text = value["code"];
+                                                              //       print('-------- supplier name then ----------');
+                                                              //       print(supplierNameController.text);
+                                                              //       print(supplierCodeController.text);
+                                                              //       print(poNoList);
+                                                              //     });
+                                                              //     getPOData(value["code"]);
+                                                              //   });
+                                                              // },
                                                             ),
                                                           ),
                                                         ),
@@ -559,18 +601,18 @@ class _EditInwardState extends State<EditInward> {
                                                                 enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
                                                                 focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
                                                               ),
-                                                              onTap: () {
-                                                                showDialog(
-                                                                  context: context,
-                                                                  builder: (context) => _showSupplierDialog(),
-                                                                ).then((value) {
-                                                                  setState(() {
-                                                                    loading = false;
-                                                                    supplierCodeController.text = value;
-                                                                  });
-                                                                  getPOData(value);
-                                                                });
-                                                              },
+                                                              // onTap: () {
+                                                              //   showDialog(
+                                                              //     context: context,
+                                                              //     builder: (context) => _showSupplierDialog(),
+                                                              //   ).then((value) {
+                                                              //     setState(() {
+                                                              //       loading = false;
+                                                              //       supplierCodeController.text = value;
+                                                              //     });
+                                                              //     getPOData(value);
+                                                              //   });
+                                                              // },
                                                             ),
                                                           ),
                                                         ),
@@ -608,17 +650,17 @@ class _EditInwardState extends State<EditInward> {
                                                                 enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
                                                                 focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
                                                               ),
-                                                              onTap: () {
-                                                                showDialog(
-                                                                  context: context,
-                                                                  builder: (context) => _showPODialog(),
-                                                                ).then((value) {
-                                                                  setState(() {
-                                                                    loading = false;
-                                                                    purchaseOrderController.text = value;
-                                                                  });
-                                                                });
-                                                              },
+                                                              // onTap: () {
+                                                              //   showDialog(
+                                                              //     context: context,
+                                                              //     builder: (context) => _showPODialog(),
+                                                              //   ).then((value) {
+                                                              //     setState(() {
+                                                              //       loading = false;
+                                                              //       purchaseOrderController.text = value;
+                                                              //     });
+                                                              //   });
+                                                              // },
                                                             ),
                                                           ),
                                                         ),
@@ -638,7 +680,7 @@ class _EditInwardState extends State<EditInward> {
                                                           width: 200,
                                                           child:TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            autofocus: true,
+                                                            readOnly: true,
                                                             controller: poTypeController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: poTypeController),
                                                             onChanged: (value){
@@ -662,7 +704,7 @@ class _EditInwardState extends State<EditInward> {
                                                           width: 200,
                                                           child:TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            autofocus: true,
+                                                            readOnly: true,
                                                             controller: invoiceNoController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: invoiceNoController),
                                                             onChanged: (value){
@@ -686,15 +728,15 @@ class _EditInwardState extends State<EditInward> {
                                                           width: 200,
                                                           child:TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            autofocus: true,
+                                                            readOnly: true,
                                                             controller: invoiceDateController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: invoiceDateController),
                                                             onChanged: (value){
 
                                                             },
-                                                            onTap: () {
-                                                              selectInvoiceDate(context);
-                                                            },
+                                                            // onTap: () {
+                                                            //   selectInvoiceDate(context);
+                                                            // },
                                                           ),
                                                         ),
                                                       ],
@@ -704,22 +746,99 @@ class _EditInwardState extends State<EditInward> {
                                               ),
                                               Column(
                                                 children: [
+                                                  // Padding(
+                                                  //   padding: const EdgeInsets.all(8),
+                                                  //   child: Row(
+                                                  //     children: [
+                                                  //       const SizedBox(
+                                                  //           width: 100,
+                                                  //           child: Text("Type",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                  //       ),
+                                                  //       SizedBox(
+                                                  //         height: 30,
+                                                  //         width: 200,
+                                                  //         child:SizedBox(
+                                                  //           height: 30,
+                                                  //           child: Focus(
+                                                  //               skipTraversal: true,
+                                                  //               descendantsAreFocusable: true,
+                                                  //               child: LayoutBuilder(
+                                                  //                 builder: (BuildContext context, BoxConstraints constraints) {
+                                                  //                   return CustomPopupMenuButton(
+                                                  //                     decoration: customPopupDecoration(hintText:typeValue1,),
+                                                  //                     itemBuilder: (BuildContext context) {
+                                                  //                       return typePopUpList;
+                                                  //                     },
+                                                  //                     hintText: "",
+                                                  //                     childWidth: constraints.maxWidth,
+                                                  //                     textController: typeController,
+                                                  //                     shape:  const RoundedRectangleBorder(
+                                                  //                       side: BorderSide(color: mTextFieldBorder),
+                                                  //                       borderRadius: BorderRadius.all(
+                                                  //                         Radius.circular(5),
+                                                  //                       ),
+                                                  //                     ),
+                                                  //                     offset: const Offset(1, 40),
+                                                  //                     tooltip: '',
+                                                  //                     onSelected: ( value) {
+                                                  //                       setState(() {
+                                                  //                         typeValue1 = value;
+                                                  //                         typeController.text = value;
+                                                  //                       });
+                                                  //                     },
+                                                  //                     onCanceled: () {
+                                                  //
+                                                  //                     },
+                                                  //                     child: Container(),
+                                                  //                   );
+                                                  //                 },
+                                                  //               )
+                                                  //           ),
+                                                  //         ),
+                                                  //       ),
+                                                  //     ],
+                                                  //   ),
+                                                  // ),
                                                   Padding(
                                                     padding: const EdgeInsets.all(8),
                                                     child: Row(
                                                       children: [
                                                         const SizedBox(
                                                             width: 100,
-                                                            child: Text("Entered By",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                            child: Text("Type",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                         ),
                                                         SizedBox(
                                                           height: 30,
                                                           width: 200,
                                                           child:TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            autofocus: true,
-                                                            controller: enteredByController,
-                                                            decoration: customerFieldDecoration(hintText: '',controller: enteredByController),
+                                                            readOnly: true,
+                                                            controller: typeController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: typeController),
+                                                            onChanged: (value){
+
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8),
+                                                    child: Row(
+                                                      children: [
+                                                        const SizedBox(
+                                                            width: 100,
+                                                            child: Text("Reference No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                        ),
+                                                        SizedBox(
+                                                          height: 30,
+                                                          width: 200,
+                                                          child:TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            readOnly: true,
+                                                            controller: referenceNoController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: referenceNoController),
                                                             onChanged: (value){
 
                                                             },
@@ -736,46 +855,59 @@ class _EditInwardState extends State<EditInward> {
                                                             width: 100,
                                                             child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                         ),
+                                                        // SizedBox(
+                                                        //   height: 30,
+                                                        //   width: 200,
+                                                        //   child:SizedBox(
+                                                        //     height: 30,
+                                                        //     child: Focus(
+                                                        //         skipTraversal: true,
+                                                        //         descendantsAreFocusable: true,
+                                                        //         child: LayoutBuilder(
+                                                        //           builder: (BuildContext context, BoxConstraints constraints) {
+                                                        //             return CustomPopupMenuButton(
+                                                        //               decoration: customPopupDecoration(hintText:canceledValue1,),
+                                                        //               itemBuilder: (BuildContext context) {
+                                                        //                 return canceledPopUpList;
+                                                        //               },
+                                                        //               hintText: "",
+                                                        //               childWidth: constraints.maxWidth,
+                                                        //               textController: canceledController,
+                                                        //               shape:  const RoundedRectangleBorder(
+                                                        //                 side: BorderSide(color: mTextFieldBorder),
+                                                        //                 borderRadius: BorderRadius.all(
+                                                        //                   Radius.circular(5),
+                                                        //                 ),
+                                                        //               ),
+                                                        //               offset: const Offset(1, 40),
+                                                        //               tooltip: '',
+                                                        //               onSelected: ( value) {
+                                                        //                 setState(() {
+                                                        //                   canceledValue1 = value;
+                                                        //                   canceledController.text = value;
+                                                        //                 });
+                                                        //               },
+                                                        //               onCanceled: () {
+                                                        //
+                                                        //               },
+                                                        //               child: Container(),
+                                                        //             );
+                                                        //           },
+                                                        //         )
+                                                        //     ),
+                                                        //   ),
+                                                        // ),
                                                         SizedBox(
                                                           height: 30,
                                                           width: 200,
-                                                          child:SizedBox(
-                                                            height: 30,
-                                                            child: Focus(
-                                                                skipTraversal: true,
-                                                                descendantsAreFocusable: true,
-                                                                child: LayoutBuilder(
-                                                                  builder: (BuildContext context, BoxConstraints constraints) {
-                                                                    return CustomPopupMenuButton(
-                                                                      decoration: customPopupDecoration(hintText:canceledValue1,),
-                                                                      itemBuilder: (BuildContext context) {
-                                                                        return canceledPopUpList;
-                                                                      },
-                                                                      hintText: "",
-                                                                      childWidth: constraints.maxWidth,
-                                                                      textController: canceledController,
-                                                                      shape:  const RoundedRectangleBorder(
-                                                                        side: BorderSide(color: mTextFieldBorder),
-                                                                        borderRadius: BorderRadius.all(
-                                                                          Radius.circular(5),
-                                                                        ),
-                                                                      ),
-                                                                      offset: const Offset(1, 40),
-                                                                      tooltip: '',
-                                                                      onSelected: ( value) {
-                                                                        setState(() {
-                                                                          canceledValue1 = value;
-                                                                          canceledController.text = value;
-                                                                        });
-                                                                      },
-                                                                      onCanceled: () {
+                                                          child:TextFormField(
+                                                            style: const TextStyle(fontSize: 11),
+                                                            readOnly: true,
+                                                            controller: canceledController,
+                                                            decoration: customerFieldDecoration(hintText: '',controller: canceledController),
+                                                            onChanged: (value){
 
-                                                                      },
-                                                                      child: Container(),
-                                                                    );
-                                                                  },
-                                                                )
-                                                            ),
+                                                            },
                                                           ),
                                                         ),
                                                       ],
@@ -804,8 +936,32 @@ class _EditInwardState extends State<EditInward> {
                                     ),
                                     child: Padding(
                                       padding: const EdgeInsets.only(left: 18,top: 0,right: 18),
-                                      child: Row(
+                                      child: Column(
                                         children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: Row(
+                                              children: [
+                                                const SizedBox(
+                                                    width: 100,
+                                                    child: Text("Entered By",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                ),
+                                                SizedBox(
+                                                  height: 30,
+                                                  width: 200,
+                                                  child:TextFormField(
+                                                    style: const TextStyle(fontSize: 11),
+                                                    readOnly: true,
+                                                    controller: enteredByController,
+                                                    decoration: customerFieldDecoration(hintText: '',controller: enteredByController),
+                                                    onChanged: (value){
+
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                           Padding(
                                             padding: const EdgeInsets.only(top: 10, left: 8, bottom: 10),
                                             child: Row(
@@ -818,7 +974,7 @@ class _EditInwardState extends State<EditInward> {
                                                   width: 400,
                                                   child:TextFormField(
                                                     style: const TextStyle(fontSize: 11),
-                                                    autofocus: true,
+                                                    readOnly: true,
                                                     controller: remarksController,
                                                     minLines: 2,
                                                     maxLines: 500,
@@ -853,6 +1009,11 @@ class _EditInwardState extends State<EditInward> {
   }
 
 
+  Future patchInwardApi() async{
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_patch/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY/guid'$sapUuid'";
+    print('------ edit inward url ------');
+    print(url);
+  }
   Future getSupplierCode() async{
     String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/A_Supplier";
     String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));

@@ -83,12 +83,16 @@ class _InwardListState extends State<InwardList> {
             'Cancelled': result['Cancelled'],
             'Remarks': result['Remarks'],
             'SAP_UUID': result['SAP_UUID'],
+            'SAP_Description': result['SAP_Description'],
+            'ReceivedBy1': result['ReceivedBy1'],
           };
           setState(() {
             inwardList.add(inwardData);
             loading = false;
           });
         }
+        print('-------- list get api --------');
+        print(inwardList[0]);
       }
     }catch(e){}
   }
@@ -427,18 +431,30 @@ class _InwardListState extends State<InwardList> {
                                                   padding: EdgeInsets.only(top: 4.0),
                                                   child: SizedBox(
                                                     height: 25,
-                                                    width: 150,
+                                                    width: 100,
                                                     child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                                                   ),
                                                 ),
                                               ),
+                                              Padding(
+                                                padding: EdgeInsets.only(top: 4.0),
+                                                child: SizedBox(
+                                                  height: 25,
+                                                  width: 100,
+                                                  child: Text("Download PDF",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                ),
+                                              ),
+                                              // Center(child: Padding(
+                                              //   padding: EdgeInsets.only(right: 8),
+                                              //   child: Text("Download PDF",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                              // ),),
                                               Center(child: Padding(
                                                 padding: EdgeInsets.only(right: 8),
                                                 child: Icon(size: 18,
                                                   Icons.more_vert,
                                                   color: Colors.transparent,
                                                 ),
-                                              ),)
+                                              ),),
                                             ],
                                           ),
                                         ),
@@ -458,12 +474,7 @@ class _InwardListState extends State<InwardList> {
                                                 MaterialButton(
                                                   hoverColor: Colors.blue[50],
                                                   onPressed: () {
-                                                    Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditInward(
-                                                      drawerWidth: drawerWidth,
-                                                      selectedDestination: widget.selectedDestination,
-                                                      inwardMap: filteredList[i],
-                                                      plantValue: widget.plantValue,
-                                                    ),));
+
                                                   },
                                                   child: Padding(
                                                     padding: const EdgeInsets.only(left: 18.0,top: 4,bottom: 3),
@@ -507,11 +518,46 @@ class _InwardListState extends State<InwardList> {
                                                             ),
                                                           ),
                                                         ),
-                                                        const Center(child: Padding(
-                                                          padding: EdgeInsets.only(right: 8),
-                                                          child: Icon(size: 18,
-                                                            Icons.arrow_circle_right,
-                                                            color: Colors.blue,
+                                                         Padding(
+                                                           padding: const EdgeInsets.only(top: 4.0),
+                                                           child: SizedBox(
+                                                             // height: 25,
+                                                             width: 100,
+                                                             child: InkWell(
+                                                               hoverColor: Colors.transparent,
+                                                               onTap: () {
+                                                                 print('--------- pdf ----------');
+                                                                 print(filteredList[i]);
+                                                               },
+                                                               child: const Icon(size: 18,
+                                                                 Icons.download,
+                                                                 color: Colors.blue,
+                                                               ),
+                                                             ),
+                                                           ),
+                                                         ),
+                                                        // const Center(child: Padding(
+                                                        //   padding: EdgeInsets.only(right: 8),
+                                                        //   child: Icon(size: 18,
+                                                        //     Icons.download,
+                                                        //     color: Colors.blue,
+                                                        //   ),
+                                                        // ),),
+                                                         Center(child: Padding(
+                                                          padding: const EdgeInsets.only(right: 8),
+                                                          child: InkWell(
+                                                            onTap: () {
+                                                              Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditInward(
+                                                                drawerWidth: drawerWidth,
+                                                                selectedDestination: widget.selectedDestination,
+                                                                inwardMap: filteredList[i],
+                                                                plantValue: widget.plantValue,
+                                                              ),));
+                                                            },
+                                                            child: const Icon(size: 18,
+                                                              Icons.arrow_circle_right,
+                                                              color: Colors.blue,
+                                                            ),
                                                           ),
                                                         ),)
                                                       ],
