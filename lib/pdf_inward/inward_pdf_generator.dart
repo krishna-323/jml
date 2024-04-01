@@ -70,7 +70,7 @@ Future<Uint8List> inwardPdfGen(Map filteredList) async {
                   // Display the image
                   Image(image, width: 70, height: 70),
                   SizedBox(width: 100),
-                  Text("JM Fritech India Private Limited",style: fontSize20Heading),
+                  Text("JM Frictech India Private Limited",style: fontSize20Heading),
                 ],
               ),
               Divider(color: PdfColors.black,height: 1),

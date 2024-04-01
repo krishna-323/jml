@@ -54,12 +54,14 @@ class _AddInwardState extends State<AddInward> {
   final searchSupplierCodeController = TextEditingController();
   final searchSupplierNameController = TextEditingController();
   final searchPONoController = TextEditingController();
+  final searchSecurityNameController = TextEditingController();
   late double drawerWidth;
 
   String dropdownValue1 = "";
   String canceledValue1 = "NO";
   String typeValue1 = "";
   List supplierCodeList = [];
+  List securityNameList = [];
   List<dynamic> poNoList = [];
   List suppliers = [];
   List poNo = [];
@@ -67,6 +69,7 @@ class _AddInwardState extends State<AddInward> {
   List<dynamic> displayData =[];
   List<Map<String, dynamic>> uniquePurchaseOrder = [];
   List<dynamic> purchaseOrders = [];
+  List securityName = [];
 
   List<CustomPopupMenuEntry<String>> canceledPopUpList = <CustomPopupMenuEntry<String>>[
     const CustomPopupMenuItem(
@@ -81,6 +84,11 @@ class _AddInwardState extends State<AddInward> {
     ),
   ];
   List<CustomPopupMenuEntry<String>> typePopUpList = <CustomPopupMenuEntry<String>>[
+    const CustomPopupMenuItem(
+      height: 40,
+      value: '-',
+      child: Center(child: SizedBox(width: 350,child: Text('-',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
+    ),
     const CustomPopupMenuItem(
       height: 40,
       value: 'Customer',
@@ -197,6 +205,7 @@ class _AddInwardState extends State<AddInward> {
 
   Future getInitialData() async{
     var data = await getSupplierCode();
+    var data2 = await getSecurityNameApi();
     if(data != null){
       suppliers = data.map((entry){
         return {
@@ -205,7 +214,15 @@ class _AddInwardState extends State<AddInward> {
         };
       }).toList();
     }
+    if(data2 != null){
+      securityName = data2.map((entry){
+        return {
+          "SecurityName":entry["SecurityName"],
+        };
+      }).toList();
+    }
     supplierCodeList = suppliers;
+    securityNameList = securityName;
     setState(() {
       loading = false;
     });
@@ -247,8 +264,12 @@ class _AddInwardState extends State<AddInward> {
                           padding: const EdgeInsets.only(right: 20),
                           child: MaterialButton(
                             color: Colors.blue,
-                            onPressed: () {
-                              if (supplierNameController.text.isEmpty) {
+                            onPressed: () async{
+                              bool invoiceExists = await isInvoiceNoExists(supplierCodeController.text, invoiceNoController.text);
+                              if(invoiceExists && invoiceNoController.text.isNotEmpty){
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invoice Number already exists for this Supplier")));
+                              }
+                              else if (supplierNameController.text.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Select Supplier Name")));
                               } else if (invoiceNoController.text.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Number")));
@@ -260,8 +281,9 @@ class _AddInwardState extends State<AddInward> {
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle In-Time")));
                               } else if(purchaseOrderController.text.isEmpty){
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter PO Number")));
-                              }
-                              else {
+                              } else if((typeController.text == 'Customer' || typeController.text == 'Supplier') && referenceNoController.text.isEmpty){
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Reference Number")));
+                              } else {
                                 Map savedInward = {
                                   "GateInwardNo": gateInwardNoController.text,
                                   "EntryDate": entryDateTime,
@@ -283,59 +305,9 @@ class _AddInwardState extends State<AddInward> {
                                 };
                                 print('--------- saved inward ----------');
                                 print(savedInward);
-                                BuildContext dialogContext = context;
-                                postInwardApi(savedInward, context).then((value) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                    return AlertDialog(
-                                      title:  Text('GateInwardNo: ${gateInwardNoController.text}'),
-                                      content: const Text("Data Posted Successfully"),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(dialogContext).pop(); // Close the dialog
-                                            Navigator.of(dialogContext).push(PageRouteBuilder(
-                                              pageBuilder: (context, animation, secondaryAnimation) => InwardList(
-                                                drawerWidth: widget.drawerWidth,
-                                                selectedDestination: widget.selectedDestination,
-                                                plantValue: widget.plantValue,
-                                              ),
-                                            ));
-                                          },
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
-                                    );
-                                  },);
-                                });
-
-                                // showDialog(
-                                //   context: context,
-                                //   builder: (context) {
-                                //     return AlertDialog(
-                                //       title: const Text('Gate Inward Confirmation'),
-                                //       content: Text('GateInwardNo: ${gateInwardNoController.text}'),
-                                //       actions: [
-                                //         TextButton(
-                                //           onPressed: () {
-                                //             Navigator.of(dialogContext).pop(); // Close the dialog
-                                //             postInwardApi(savedInward, dialogContext).then((value) {
-                                //               Navigator.of(dialogContext).push(PageRouteBuilder(
-                                //                 pageBuilder: (context, animation, secondaryAnimation) => InwardList(
-                                //                     drawerWidth: widget.drawerWidth,
-                                //                     selectedDestination: widget.selectedDestination,
-                                //                   plantValue: widget.plantValue,
-                                //                 ),
-                                //               ));
-                                //             });
-                                //           },
-                                //           child: const Text('OK'),
-                                //         ),
-                                //       ],
-                                //     );
-                                //   },);
+                                postInwardApi(savedInward, context);
                               }
+
                             },
                             child: const Text("Save", style: TextStyle(color: Colors.white)),
                           ),
@@ -364,7 +336,7 @@ class _AddInwardState extends State<AddInward> {
                           controller: _horizontalScrollController,
                           scrollDirection: Axis.horizontal,
                           child: Padding(
-                            padding: const EdgeInsets.only(top: 20, left: 80, bottom: 30, right: 80),
+                            padding: const EdgeInsets.only(top: 0, left: 80, bottom: 30, right: 80),
                             child: Column(
                               children: [
                                 SizedBox(
@@ -596,10 +568,10 @@ class _AddInwardState extends State<AddInward> {
                                                                     loading = false;
                                                                     supplierNameController.text = value["name"];
                                                                     supplierCodeController.text = value["code"];
-                                                                    print('-------- supplier name then ----------');
-                                                                    print(supplierNameController.text);
-                                                                    print(supplierCodeController.text);
-                                                                    print(poNoList);
+                                                                    poNoList=[];
+                                                                    purchaseOrders = [];
+                                                                    purchaseOrderController.clear();
+                                                                    poTypeController.clear();
                                                                   });
                                                                   getPOData(value["code"]);
                                                                 });
@@ -649,6 +621,10 @@ class _AddInwardState extends State<AddInward> {
                                                                   setState(() {
                                                                     loading = false;
                                                                     supplierCodeController.text = value;
+                                                                    poNoList=[];
+                                                                    purchaseOrders = [];
+                                                                    purchaseOrderController.clear();
+                                                                    poTypeController.clear();
                                                                   });
                                                                   getPOData(value);
                                                                 });
@@ -698,6 +674,10 @@ class _AddInwardState extends State<AddInward> {
                                                                   setState(() {
                                                                     loading = false;
                                                                     purchaseOrderController.text = value;
+                                                                    // poNoList=[];
+                                                                    // purchaseOrders = [];
+                                                                    // purchaseOrderController.clear();
+                                                                    // poTypeController.clear();
                                                                   });
                                                                 });
                                                               },
@@ -824,6 +804,9 @@ class _AddInwardState extends State<AddInward> {
                                                                         setState(() {
                                                                           typeValue1 = value;
                                                                           typeController.text = value;
+                                                                          print('---------- type ----------');
+                                                                          print(typeValue1);
+                                                                          print(typeController.text);
                                                                         });
                                                                       },
                                                                       onCanceled: () {
@@ -956,9 +939,31 @@ class _AddInwardState extends State<AddInward> {
                                                     style: const TextStyle(fontSize: 11),
                                                     autofocus: true,
                                                     controller: enteredByController,
-                                                    decoration: customerFieldDecoration(hintText: '',controller: enteredByController),
+                                                    decoration:  const InputDecoration(
+                                                    hintText: " Select Security Name",
+                                                    hintStyle: TextStyle(fontSize: 11,),
+                                                    border: OutlineInputBorder(
+                                                        borderSide: BorderSide(color:  Colors.blue)
+                                                    ),
+                                                    contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
+                                                    suffixIcon: Icon(
+                                                      Icons.arrow_drop_down_outlined,
+                                                      color: Colors.blue,size: 16,
+                                                    ),
+                                                    enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
+                                                    focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
+                                                  ),
                                                     onChanged: (value){
 
+                                                    },
+                                                    onTap: () {
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (context) {
+                                                          return _showEnteredByDialog();
+                                                        },).then((value){
+                                                        enteredByController.text = value;
+                                                      });
                                                     },
                                                   ),
                                                 ),
@@ -974,7 +979,7 @@ class _AddInwardState extends State<AddInward> {
                                                     child: Text("Remarks",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                 ),
                                                 SizedBox(
-                                                  width: 400,
+                                                  width: 800,
                                                   child:TextFormField(
                                                     style: const TextStyle(fontSize: 11),
                                                     autofocus: true,
@@ -1122,6 +1127,31 @@ class _AddInwardState extends State<AddInward> {
     }
   }
 
+  Future<bool> isInvoiceNoExists(String supplierCode, String invoice) async {
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY?filter=SupplierCode eq '$supplierCode' and InvoiceNo eq '$invoice'";
+    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
+    print('------------- getSupplierCodeInvoice ---------------');
+    print(url);
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': authToken,
+        },
+      );
+      if (response.statusCode == 200) {
+        Map tempData = json.decode(response.body);
+        List results = tempData['d']['results'];
+        print('-------- result ---------');
+        print(results);
+        return results.isNotEmpty;
+      }
+    } catch (e) {
+      print('Error checking invoice number existence: $e');
+    }
+    return false; // Default to false if an error occurs or no results are found
+  }
+
   Future postInwardApi(Map tempData, BuildContext context) async {
     String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_post/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
     String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
@@ -1141,6 +1171,30 @@ class _AddInwardState extends State<AddInward> {
         if (jsonResponse['d'] != null && jsonResponse['d']['SAP_UUID'] != null) {
           // print('-------- post response ---------');
           // print(response.body);
+          BuildContext dialogContext = context;
+           showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title:  Text('GateInwardNo: ${gateInwardNoController.text}'),
+                content:  Text("Data posted successfully"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop(); // Close the dialog
+                      Navigator.of(dialogContext).push(PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => InwardList(
+                          drawerWidth: widget.drawerWidth,
+                          selectedDestination: widget.selectedDestination,
+                          plantValue: widget.plantValue,
+                        ),
+                      ));
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Data posted successfully'),
@@ -1163,6 +1217,23 @@ class _AddInwardState extends State<AddInward> {
         final errorResponse = json.decode(response.body);
         final errorMessage = errorResponse['error']['message']['value'];
         if (errorMessage.contains("Instance with the same key already exists")) {
+          BuildContext dialogContext = context;
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title:  Text('GateInwardNo: ${gateInwardNoController.text}'),
+                content:  Text("Instance with the same key already exists"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop(); // Close the dialog
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Instance with the same key already exists'),
@@ -1191,6 +1262,43 @@ class _AddInwardState extends State<AddInward> {
     }
   }
 
+  Future getSecurityNameApi() async{
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_SECURITYMASTER_CDS/YY1_SECURITYMASTER?filter=Active eq true";
+    print('------- security url ----------');
+    print(url);
+    String authToken = "Basic ${base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'))}";
+    try{
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Authorization': authToken},
+      );
+      if(response.statusCode == 200){
+        Map<String, dynamic> tempData = {};
+        tempData = json.decode(response.body);
+        if(tempData['d']['results'].isEmpty){
+          if(mounted){
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No Data Found !')));
+          }
+          setState(() {
+            loading = false;
+          });
+          return [];
+        }
+        else {
+          setState(() {
+            securityNameList = tempData['d']['results'];
+          });
+        }
+        return json.decode(response.body)['d']['results'];
+      } else{
+        print('Request failed with status: ${response.statusCode}');
+        return null;
+      }
+    }catch(e){
+      print('Error occurred in API: $e');
+      return null;
+    }
+  }
 
 
 
@@ -1230,10 +1338,13 @@ class _AddInwardState extends State<AddInward> {
                       return InkWell(
                         onTap: () {
                           Navigator.pop(context, supplierCodeList[index]["Supplier"].toString());
-                          print('------- supplier on tap --------');
-                          print(supplierCodeList[index]["SupplierName"]);
-                          print(poNoList);
-                          supplierNameController.text = supplierCodeList[index]["SupplierName"];
+                         setState((){
+                           print('------- supplier on tap --------');
+                           print(supplierCodeList[index]["SupplierName"]);
+                           print(poNoList);
+                           supplierNameController.text = supplierCodeList[index]["SupplierName"];
+                           purchaseOrderController.clear();
+                         });
                         },
                         child: ListTile(
                           title: Text(supplierCodeList[index]["Supplier"].toString()),
@@ -1365,6 +1476,59 @@ class _AddInwardState extends State<AddInward> {
     );
   }
 
+  _showEnteredByDialog(){
+    return AlertDialog(
+      title: const Text("Select Security Name"),
+      content: StatefulBuilder(
+        builder: (context, setState) {
+        return SizedBox(
+          height: 500,
+          child: Column(
+            children: [
+              Expanded(
+                  child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: searchSecurityNameController,
+                      decoration: const InputDecoration(labelText: "Search Security Name"),
+                      onChanged: (value) {
+                        setState((){
+                          if(value.isEmpty || value == ""){
+                            securityNameList = [];
+                          }
+                          filterSecurityName(value);
+                        });
+                      },
+                    ),
+                  )
+              ),
+              SizedBox(
+                width: 500,
+                height: 400,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: securityNameList.length,
+                  itemBuilder: (context, index) {
+                    return InkWell(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        enteredByController.text = securityNameList[index]['SecurityName'];
+                        print('--------- security name --------');
+                        print(enteredByController.text);
+                      },
+                      child: ListTile(
+                        title: Text(securityNameList[index]['SecurityName']),
+                      ),
+                    );
+                },),
+              ),
+            ],
+          ),
+        );
+      },),
+    );
+  }
+
   String getPurchaseOrderType(String purchaseOrder) {
     var order = purchaseOrders.firstWhere((order) => order['_PurchaseOrder']['PurchaseOrder'] == purchaseOrder, orElse: () => null);
     return order != null ? order['_PurchaseOrder']['PurchaseOrderType'] : '';
@@ -1390,13 +1554,22 @@ class _AddInwardState extends State<AddInward> {
 
   filterPONo(String searchQuery) {
     if (searchQuery.isEmpty) {
-      poNoList = purchaseOrders.map((order) => order['_PurchaseOrder']['PurchaseOrder']).toList();
+      poNoList = purchaseOrders.map((order) => order['_PurchaseOrder']['PurchaseOrder']).toSet().toList();
     } else {
       poNoList = purchaseOrders
           .where((order) => order['_PurchaseOrder']['PurchaseOrder'].contains(searchQuery))
-          .map((order) => order['_PurchaseOrder']['PurchaseOrder'])
+          .map((order) => order['_PurchaseOrder']['PurchaseOrder']).toSet()
           .toList();
     }
+  }
+
+  void filterSecurityName(String value) {
+    setState(() {
+      securityNameList = securityName.where((element) {
+        final secName = element['SecurityName'].toString().toLowerCase();
+        return secName.contains(value.toLowerCase());
+      }).toList();
+    });
   }
 
   customerFieldDecoration( {required TextEditingController controller, required String hintText, bool? error, Function? onTap}) {

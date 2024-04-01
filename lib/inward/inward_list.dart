@@ -35,6 +35,7 @@ class _InwardListState extends State<InwardList> {
   final _verticalScrollController = ScrollController();
 
   final searchGateInNo = TextEditingController();
+  final searchSupplierName = TextEditingController();
   final searchPONo = TextEditingController();
   final searchEntryDate = TextEditingController();
   final searchCancel = TextEditingController();
@@ -330,6 +331,40 @@ class _InwardListState extends State<InwardList> {
                                               width: 150,
                                               child: TextFormField(
                                                 style: const TextStyle(fontSize: 11),
+                                                controller: searchSupplierName,
+                                                decoration: searchSupplierNameDecoration(hintText: "Search Supplier Name"),
+                                                onChanged: (value) {
+                                                  if(value.isEmpty || value == ""){
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    setState(() {
+                                                      if(inwardList.length > 1000){
+                                                        for(int i=0; i < startVal + 1000; i++){
+                                                          filteredList.add(inwardList[i]);
+                                                        }
+                                                      } else{
+                                                        for(int i=0; i < inwardList.length; i++){
+                                                          filteredList.add(inwardList[i]);
+                                                        }
+                                                      }
+                                                    });
+                                                  } else{
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    searchEntryDate.clear();
+                                                    searchPONo.clear();
+                                                    searchCancel.clear();
+                                                    fetchSupplierName(searchSupplierName.text);
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                            const SizedBox(width: 20,),
+                                            SizedBox(
+                                              height: 30,
+                                              width: 150,
+                                              child: TextFormField(
+                                                style: const TextStyle(fontSize: 11),
                                                 controller: searchPONo,
                                                 decoration: searchPoNoDecoration(hintText: "Search PO No"),
                                                 onChanged: (value) {
@@ -443,6 +478,16 @@ class _InwardListState extends State<InwardList> {
                                                   child: SizedBox(
                                                     height: 25,
                                                     // width: 150,
+                                                    child: Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(top: 4.0),
+                                                  child: SizedBox(
+                                                    height: 25,
+                                                    // width: 150,
                                                     child: Text("PO Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                                                   ),
                                                 ),
@@ -539,6 +584,15 @@ class _InwardListState extends State<InwardList> {
                                                             child: SizedBox(
                                                               // height: 25,
                                                               child: Text(filteredList[i]['GateInwardNo']??"",style: const TextStyle(fontSize: 11)),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(top: 4.0),
+                                                            child: SizedBox(
+                                                              // height: 25,
+                                                              child: Text(filteredList[i]['SupplierName']??"",style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
                                                         ),
@@ -760,6 +814,28 @@ class _InwardListState extends State<InwardList> {
       focusedBorder:  OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :Colors.blue)),
     );
   }
+  searchSupplierNameDecoration({required String hintText, bool? error}){
+    return InputDecoration(
+      hoverColor: mHoverColor,
+      suffixIcon: searchSupplierName.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
+          onTap: (){
+            setState(() {
+              searchSupplierName.clear();
+              filteredList = inwardList;
+            });
+          },
+          child: const Icon(Icons.close,size: 14,)),
+      border: const OutlineInputBorder(
+          borderSide: BorderSide(color:  Colors.blue)),
+      constraints:  const BoxConstraints(maxHeight:35),
+      hintText: hintText,
+      hintStyle: const TextStyle(fontSize: 11),
+      counterText: '',
+      contentPadding: const EdgeInsets.fromLTRB(12, 00, 0, 0),
+      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :mTextFieldBorder)),
+      focusedBorder:  OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :Colors.blue)),
+    );
+  }
   searchPoNoDecoration({required String hintText, bool? error}){
     return InputDecoration(
       hoverColor: mHoverColor,
@@ -809,6 +885,13 @@ class _InwardListState extends State<InwardList> {
     if(inwardList.isNotEmpty && gateInNo.isNotEmpty){
       setState(() {
         filteredList = inwardList.where((inward) => inward["GateInwardNo"].toLowerCase().contains(gateInNo.toLowerCase())).toList();
+      });
+    }
+  }
+  void fetchSupplierName(String gateInNo) {
+    if(inwardList.isNotEmpty && gateInNo.isNotEmpty){
+      setState(() {
+        filteredList = inwardList.where((inward) => inward["SupplierName"].toLowerCase().contains(gateInNo.toLowerCase())).toList();
       });
     }
   }

@@ -82,6 +82,11 @@ class _EditInwardState extends State<EditInward> {
   List<CustomPopupMenuEntry<String>> typePopUpList = <CustomPopupMenuEntry<String>>[
     const CustomPopupMenuItem(
       height: 40,
+      value: '-',
+      child: Center(child: SizedBox(width: 350,child: Text('-',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
+    ),
+    const CustomPopupMenuItem(
+      height: 40,
       value: 'Customer',
       child: Center(child: SizedBox(width: 350,child: Text('Customer',maxLines: 1,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 11)))),
     ),
@@ -256,51 +261,51 @@ class _EditInwardState extends State<EditInward> {
                         },
                         child: const Icon(Icons.keyboard_backspace_outlined),
                       ),
-                      actions: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 20),
-                          child: MaterialButton(
-                            color: Colors.blue,
-                            onPressed: () {
-                              // String entryTime = entryTimeController.text;
-                              // DateTime entryTimeDateTime = DateFormat.jm().parse(entryTime);
-                              // String formattedEntryTime = "PT${entryTimeDateTime.hour}H${entryTimeDateTime.minute}M00S";
-                              //
-                              // String vehicleInTime = vehicleInTimeController.text;
-                              // DateTime vehicleInTimeDateTime = DateFormat.jm().parse(vehicleInTime);
-                              // String formattedVehicleInTime = "PT${vehicleInTimeDateTime.hour}H${vehicleInTimeDateTime.minute}M00S";
-                              //
-                              // String entryDate = entryDateController.text;
-                              // DateTime entryDateDateTime = DateFormat("dd-MM-yyyy").parse(entryDate);
-                              // String formattedEntryDate = "/Date(${entryDateDateTime.millisecondsSinceEpoch})/";
-                              //
-                              // String invoiceDate = invoiceDateController.text;
-                              // DateTime invoiceDateDateTime = DateFormat("dd-MM-yyyy").parse(invoiceDate);
-                              // String formattedInvoiceDate = "/Date(${invoiceDateDateTime.millisecondsSinceEpoch})/";
-
-                              Map editInward = {
-                                "gateInwardNo": gateInwardNoController.text,
-                                "entryDate": entryDateController.text,
-                                "entryTime": entryTimeController.text,
-                                "plant": plantController.text,
-                                "vehicleNumber": vehicleNoController.text,
-                                "vehicleInTime": vehicleInTimeController.text,
-                                "supplierCode": supplierCodeController.text,
-                                "supplierName": supplierNameController.text,
-                                "purchaseOrderNo": purchaseOrderController.text,
-                                "purchaseOrderType": poTypeController.text,
-                                "invoiceNo": invoiceNoController.text,
-                                "invoiceDate": invoiceDateController.text,
-                                "entredBy": enteredByController.text,
-                                "remarks": remarksController.text,
-                                "canceledBy": canceledController.text,
-                                "receivedBy": receivedController.text
-                              };
-                              print('-------- edit inward -----------');
-                              print(editInward);
-                            },child: const Text("Save",style: TextStyle(color: Colors.white)),),
-                        )
-                      ],
+                      // actions: [
+                      //   Padding(
+                      //     padding: const EdgeInsets.only(right: 20),
+                      //     child: MaterialButton(
+                      //       color: Colors.blue,
+                      //       onPressed: () {
+                      //         // String entryTime = entryTimeController.text;
+                      //         // DateTime entryTimeDateTime = DateFormat.jm().parse(entryTime);
+                      //         // String formattedEntryTime = "PT${entryTimeDateTime.hour}H${entryTimeDateTime.minute}M00S";
+                      //         //
+                      //         // String vehicleInTime = vehicleInTimeController.text;
+                      //         // DateTime vehicleInTimeDateTime = DateFormat.jm().parse(vehicleInTime);
+                      //         // String formattedVehicleInTime = "PT${vehicleInTimeDateTime.hour}H${vehicleInTimeDateTime.minute}M00S";
+                      //         //
+                      //         // String entryDate = entryDateController.text;
+                      //         // DateTime entryDateDateTime = DateFormat("dd-MM-yyyy").parse(entryDate);
+                      //         // String formattedEntryDate = "/Date(${entryDateDateTime.millisecondsSinceEpoch})/";
+                      //         //
+                      //         // String invoiceDate = invoiceDateController.text;
+                      //         // DateTime invoiceDateDateTime = DateFormat("dd-MM-yyyy").parse(invoiceDate);
+                      //         // String formattedInvoiceDate = "/Date(${invoiceDateDateTime.millisecondsSinceEpoch})/";
+                      //
+                      //         Map editInward = {
+                      //           "gateInwardNo": gateInwardNoController.text,
+                      //           "entryDate": entryDateController.text,
+                      //           "entryTime": entryTimeController.text,
+                      //           "plant": plantController.text,
+                      //           "vehicleNumber": vehicleNoController.text,
+                      //           "vehicleInTime": vehicleInTimeController.text,
+                      //           "supplierCode": supplierCodeController.text,
+                      //           "supplierName": supplierNameController.text,
+                      //           "purchaseOrderNo": purchaseOrderController.text,
+                      //           "purchaseOrderType": poTypeController.text,
+                      //           "invoiceNo": invoiceNoController.text,
+                      //           "invoiceDate": invoiceDateController.text,
+                      //           "entredBy": enteredByController.text,
+                      //           "remarks": remarksController.text,
+                      //           "canceledBy": canceledController.text,
+                      //           "receivedBy": receivedController.text
+                      //         };
+                      //         print('-------- edit inward -----------');
+                      //         print(editInward);
+                      //       },child: const Text("Save",style: TextStyle(color: Colors.white)),),
+                      //   )
+                      // ],
                     ),
                   ),
                 ),
@@ -971,7 +976,7 @@ class _EditInwardState extends State<EditInward> {
                                                     child: Text("Remarks",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                 ),
                                                 SizedBox(
-                                                  width: 400,
+                                                  width: 800,
                                                   child:TextFormField(
                                                     style: const TextStyle(fontSize: 11),
                                                     readOnly: true,
