@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:adaptive_scrollbar/adaptive_scrollbar.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,8 @@ import 'package:jml/utils/custom_appbar.dart';
 import 'package:jml/utils/custom_drawer.dart';
 import 'package:jml/utils/custom_loader.dart';
 import 'package:jml/widgets/outlined_mbutton.dart';
-
+import 'dart:html' as html;
+import '../pdf_inward/inward_pdf_generator.dart';
 import '../utils/jml_colors.dart';
 
 class InwardList extends StatefulWidget {
@@ -128,6 +130,35 @@ class _InwardListState extends State<InwardList> {
       print('Error formatting date: $e');
       return '';
     }
+  }
+  ///Down pdf.
+  Future downloadJmiPdf(Map filteredList)async{
+    print('----filteredList----');
+    print(filteredList['GateInwardNo']);
+
+    final Uint8List pdfBytes = await inwardPdfGen(filteredList);
+    // print('-----Uint8List-----');
+    // print(pdfBytes.runtimeType);
+
+    // Create a blob from the PDF bytes
+    final blob = html.Blob([pdfBytes]);
+
+    final url = html.Url.createObjectUrlFromBlob(blob);
+
+    // Create a download link
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute("download", "${filteredList['GateInwardNo']??""} .pdf")
+      ..text = "Download PDF";
+
+    // Append the anchor element to the body
+    html.document.body?.append(anchor);
+
+    // Click the anchor to initiate download.
+    anchor.click();
+
+    // Clean up resources
+    html.Url.revokeObjectUrl(url);
+    anchor.remove();
   }
   @override
   void initState() {
@@ -608,8 +639,9 @@ class _InwardListState extends State<InwardList> {
                                                               child: InkWell(
                                                                 hoverColor: Colors.transparent,
                                                                 onTap: () {
-                                                                  print('--------- pdf ----------');
-                                                                  print(filteredList[i]);
+                                                                  // print('--------- pdf ----------');
+                                                                  // print(filteredList[i]);
+                                                                  downloadJmiPdf(filteredList[i]);
                                                                 },
                                                                 child: const Icon(size: 18,
                                                                   Icons.download,

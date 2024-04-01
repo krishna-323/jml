@@ -40,7 +40,7 @@ dependencies:
   adaptive_scrollbar: ^2.1.2
   intl: ^0.18.1
   http: ^0.13.1
-
+  pdf: ^3.10.8
 dev_dependencies:
   flutter_test:
     sdk: flutter
