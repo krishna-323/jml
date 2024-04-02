@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:jml/home/home_screen.dart';
+import 'package:jml/utils/config.dart';
 import 'package:jml/utils/jml_colors.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -202,15 +203,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future postLogin(TextEditingController userName, TextEditingController password, TextEditingController plant) async{
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_USERCRED_CDS/YY1_USERCRED?filter=UserName eq '${userName.text}' and Password eq '${password.text}'";
+    String url = "${StaticData.apiURL}/YY1_USERCRED_CDS/YY1_USERCRED?filter=UserName eq '${userName.text}' and Password eq '${password.text}'";
     print('------- login url ---------');
-    print(url);
-    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
+    print(url);;
     try{
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          'Authorization': authToken,
+          'Authorization': StaticData.basicAuth,
         },
       );
 

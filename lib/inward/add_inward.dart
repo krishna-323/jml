@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:jml/inward/inward_list.dart';
 import 'package:jml/utils/custom_loader.dart';
 import 'package:http/http.dart' as http;
+import '../utils/config.dart';
 import '../utils/custom_appbar.dart';
 import '../utils/custom_drawer.dart';
 import '../utils/custom_popup_dropdown.dart';
@@ -431,7 +432,7 @@ class _AddInwardState extends State<AddInward> {
                                                           width: 200,
                                                           child: TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            // readOnly: true,
+                                                            readOnly: true,
                                                             controller: entryTimeController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: entryTimeController),
                                                             onChanged: (value){
@@ -700,7 +701,7 @@ class _AddInwardState extends State<AddInward> {
                                                           width: 200,
                                                           child:TextFormField(
                                                             style: const TextStyle(fontSize: 11),
-                                                            autofocus: true,
+                                                            readOnly: true,
                                                             controller: poTypeController,
                                                             decoration: customerFieldDecoration(hintText: '',controller: poTypeController),
                                                             onChanged: (value){
@@ -1017,13 +1018,12 @@ class _AddInwardState extends State<AddInward> {
   }
 
   Future getSupplierCode() async{
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/A_Supplier";
-    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
+    String url = "${StaticData.apiURL}/A_Supplier";
     try {
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          'Authorization': authToken,
+          'Authorization': StaticData.basicAuth,
         },
       );
 
@@ -1058,14 +1058,13 @@ class _AddInwardState extends State<AddInward> {
 
 
   Future<List<dynamic>?> getPOData(String supplierCode) async {
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/PurchaseOrder/PurchaseOrderScheduleLine?filter=OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA' and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder";
-    String authToken = "Basic ${base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'))}";
-    print('------- get po URL -------');
+    String url = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder";
+    print('---------- po get url ----------');
     print(url);
     try {
       final response = await http.get(
         Uri.parse(url),
-        headers: {'Authorization': authToken},
+        headers: {'Authorization': StaticData.basicAuth},
       );
       if (response.statusCode == 200) {
         Map<String, dynamic>? tempData = json.decode(response.body);
@@ -1103,13 +1102,12 @@ class _AddInwardState extends State<AddInward> {
   }
 
   Future getGateInNo() async{
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY?orderby=GateInwardNo desc";
-    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
+    String url = "${StaticData.apiURL}/YY1_GATEENTRY_CDS/YY1_GATEENTRY?orderby=GateInwardNo desc";
     try{
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          'Authorization': authToken,
+          'Authorization': StaticData.basicAuth,
         },
       );
       if(response.statusCode == 200){
@@ -1128,15 +1126,12 @@ class _AddInwardState extends State<AddInward> {
   }
 
   Future<bool> isInvoiceNoExists(String supplierCode, String invoice) async {
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY?filter=SupplierCode eq '$supplierCode' and InvoiceNo eq '$invoice'";
-    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
-    print('------------- getSupplierCodeInvoice ---------------');
-    print(url);
+    String url = "${StaticData.apiURL}/YY1_GATEENTRY_CDS/YY1_GATEENTRY?filter=SupplierCode eq '$supplierCode' and InvoiceNo eq '$invoice'";
     try {
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          'Authorization': authToken,
+          'Authorization': StaticData.basicAuth,
         },
       );
       if (response.statusCode == 200) {
@@ -1153,15 +1148,14 @@ class _AddInwardState extends State<AddInward> {
   }
 
   Future postInwardApi(Map tempData, BuildContext context) async {
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_post/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
-    String authToken = "Basic " + base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'));
+    String url = "${StaticData.apiPostURL}/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
 
     try {
       final response = await http.post(
         Uri.parse(url),
         headers: {
           "Content-Type": "application/json",
-          'Authorization': authToken,
+          'Authorization': StaticData.basicAuth,
         },
         body:  json.encode(tempData),
       );
@@ -1169,8 +1163,8 @@ class _AddInwardState extends State<AddInward> {
       if (response.statusCode == 201) {
         final jsonResponse = json.decode(response.body);
         if (jsonResponse['d'] != null && jsonResponse['d']['SAP_UUID'] != null) {
-          // print('-------- post response ---------');
-          // print(response.body);
+          print('-------- post response ---------');
+          print(response.body);
           BuildContext dialogContext = context;
            showDialog(
             context: context,
@@ -1263,14 +1257,11 @@ class _AddInwardState extends State<AddInward> {
   }
 
   Future getSecurityNameApi() async{
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_SECURITYMASTER_CDS/YY1_SECURITYMASTER?filter=Active eq true";
-    print('------- security url ----------');
-    print(url);
-    String authToken = "Basic ${base64Encode(utf8.encode('INTEGRATION:rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl'))}";
+    String url = "${StaticData.apiURL}/YY1_SECURITYMASTER_CDS/YY1_SECURITYMASTER?filter=Active eq true";
     try{
       final response = await http.get(
         Uri.parse(url),
-        headers: {'Authorization': authToken},
+        headers: {'Authorization': StaticData.basicAuth},
       );
       if(response.statusCode == 200){
         Map<String, dynamic> tempData = {};
@@ -1511,7 +1502,7 @@ class _AddInwardState extends State<AddInward> {
                   itemBuilder: (context, index) {
                     return InkWell(
                       onTap: () {
-                        Navigator.of(context).pop();
+                        Navigator.pop(context,securityNameList[index]['SecurityName']);
                         enteredByController.text = securityNameList[index]['SecurityName'];
                         print('--------- security name --------');
                         print(enteredByController.text);
