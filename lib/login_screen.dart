@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:jml/home/home_screen.dart';
 import 'package:jml/utils/jml_colors.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -221,6 +222,10 @@ class _LoginScreenState extends State<LoginScreen> {
           print(responseData);
           if(responseData.containsKey("d") && responseData["d"]["results"].isNotEmpty){
             String plantValue = responseData["d"]["results"][0]["Plant"];
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            prefs.setString('userName', userName.text);
+            prefs.setString('password', password.text);
+            prefs.setString('plant', plantValue);
             return plantValue;
           } else {
             print("Login failed: No user found");
