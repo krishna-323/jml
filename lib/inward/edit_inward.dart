@@ -252,7 +252,7 @@ class _EditInwardState extends State<EditInward> {
                       elevation: 1,
                       surfaceTintColor: Colors.white,
                       shadowColor: Colors.black,
-                      title: const Text("Edit Inward"),
+                      title: const Text("View Inward"),
                       centerTitle: true,
                       leading: InkWell(
                         onTap: () {

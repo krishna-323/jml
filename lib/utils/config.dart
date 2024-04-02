@@ -9,6 +9,7 @@ abstract class StaticData {
   static String apiPostURL ='Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_post/Customising';
 
 /// Production System
+/// hide OutWard Card in Home
 //   static String username = 'INTEGRATION';
 //   static String password = 'rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl';
 //   static String basicAuth = 'Basic ${base64Encode(utf8.encode('$username:$password'))}';

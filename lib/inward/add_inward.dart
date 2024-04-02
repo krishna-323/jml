@@ -265,50 +265,72 @@ class _AddInwardState extends State<AddInward> {
                           padding: const EdgeInsets.only(right: 20),
                           child: MaterialButton(
                             color: Colors.blue,
-                            onPressed: () async{
-                              bool invoiceExists = await isInvoiceNoExists(supplierCodeController.text, invoiceNoController.text);
-                              if(invoiceExists && invoiceNoController.text.isNotEmpty){
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invoice Number already exists for this Supplier")));
-                              }
-                              else if (supplierNameController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Select Supplier Name")));
-                              } else if (invoiceNoController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Number")));
-                              } else if (invoiceDateController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Date")));
-                              } else if (vehicleNoController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Number")));
-                              } else if (vehicleInTimeController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle In-Time")));
-                              } else if(purchaseOrderController.text.isEmpty){
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter PO Number")));
-                              } else if((typeController.text == 'Customer' || typeController.text == 'Supplier') && referenceNoController.text.isEmpty){
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Reference Number")));
+                            onPressed: () async {
+                              // Check if the user selected Customer or Supplier
+                              if (typeController.text == 'Customer' || typeController.text == 'Supplier') {
+                                if (referenceNoController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Reference Number")));
+                                  return;
+                                }
                               } else {
-                                Map savedInward = {
-                                  "GateInwardNo": gateInwardNoController.text,
-                                  "EntryDate": entryDateTime,
-                                  "EntryTime": formattedEntryTime,
-                                  "Plant": plantController.text,
-                                  "VehicleNumber": vehicleNoController.text,
-                                  "VehicleIntime": formattedVehicleTime,
-                                  "SupplierCode": supplierCodeController.text,
-                                  "SupplierName": supplierNameController.text,
-                                  "PurchaseOrderNo": purchaseOrderController.text,
-                                  "InvoiceNo": invoiceNoController.text,
-                                  "InvoiceDate": invoiceDateTime,
-                                  "EnteredBy": enteredByController.text,
-                                  "Remarks": remarksController.text,
-                                  "Cancelled": canceledController.text,
-                                  "ReceivedBy": poTypeController.text,
-                                  "SAP_Description": typeController.text,
-                                  "ReceivedBy1": referenceNoController.text
-                                };
-                                print('--------- saved inward ----------');
-                                print(savedInward);
-                                postInwardApi(savedInward, context);
+                                if (supplierNameController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Select Supplier Name")));
+                                  return;
+                                }
+                                if (purchaseOrderController.text.isEmpty || purchaseOrderController.text == "-") {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter PO Number")));
+                                  return;
+                                }
+                                if (invoiceNoController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Number")));
+                                  return;
+                                }
+                                bool invoiceExists = await isInvoiceNoExists(supplierCodeController.text, invoiceNoController.text);
+                                if (invoiceExists && supplierCodeController.text.isNotEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invoice Number already exists for this Supplier")));
+                                  return;
+                                }
+                              }
+                              if (invoiceDateController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Date")));
+                                return;
+                              }
+                              if (vehicleNoController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Number")));
+                                return;
+                              }
+                              if (vehicleInTimeController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle In-Time")));
+                                return;
+                              }
+                              if (enteredByController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Security Name")));
+                                return;
                               }
 
+                              // If all conditions are satisfied, proceed to save the data
+                              Map savedInward = {
+                                "GateInwardNo": gateInwardNoController.text,
+                                "EntryDate": entryDateTime,
+                                "EntryTime": formattedEntryTime,
+                                "Plant": plantController.text,
+                                "VehicleNumber": vehicleNoController.text,
+                                "VehicleIntime": formattedVehicleTime,
+                                "SupplierCode": supplierCodeController.text,
+                                "SupplierName": supplierNameController.text,
+                                "PurchaseOrderNo": purchaseOrderController.text,
+                                "InvoiceNo": invoiceNoController.text,
+                                "InvoiceDate": invoiceDateTime,
+                                "EnteredBy": enteredByController.text,
+                                "Remarks": remarksController.text,
+                                "Cancelled": canceledController.text,
+                                "ReceivedBy": poTypeController.text,
+                                "SAP_Description": typeController.text,
+                                "ReceivedBy1": referenceNoController.text
+                              };
+                              print('--------- saved inward ----------');
+                              print(savedInward);
+                              postInwardApi(savedInward, context);
                             },
                             child: const Text("Save", style: TextStyle(color: Colors.white)),
                           ),
@@ -1084,8 +1106,9 @@ class _AddInwardState extends State<AddInward> {
             tempData['value'] != null) {
           purchaseOrders = tempData['value'];
           poNoList = purchaseOrders.map((order) => order['_PurchaseOrder']['PurchaseOrder']).toSet().toList();
-          print('------- get po data ----------');
-          print(poNoList);
+          // print('------- get po data ----------');
+          // print(purchaseOrders);
+          // print(poNoList);
           return purchaseOrders;
         } else {
           print('Error: Unable to find results in response body');
