@@ -16,11 +16,11 @@ import '../pdf_inward/inward_pdf_generator.dart';
 import '../utils/config.dart';
 import '../utils/jml_colors.dart';
 
-class InwardList extends StatefulWidget {
+class InwardList3 extends StatefulWidget {
   final double drawerWidth;
   final double selectedDestination;
   final String plantValue;
-  const InwardList({
+  const InwardList3({
     required this.drawerWidth,
     required this.selectedDestination,
     required this.plantValue,
@@ -28,11 +28,10 @@ class InwardList extends StatefulWidget {
   });
 
   @override
-  State<InwardList> createState() => _InwardListState();
+  State<InwardList3> createState() => _InwardList3State();
 }
 
-class _InwardListState extends State<InwardList> {
-
+class _InwardList3State extends State<InwardList3> {
   final _horizontalScrollController = ScrollController();
   final _verticalScrollController = ScrollController();
 
@@ -105,7 +104,7 @@ class _InwardListState extends State<InwardList> {
       String timeWithoutPT = timeString.substring(2);
       int hours = int.parse(timeWithoutPT.substring(0, 2));
       int minutes = int.parse(timeWithoutPT.substring(3, 5));
-      String meridian = 'AM'; 
+      String meridian = 'AM';
       if (hours >= 12) {
         if (hours > 12) {
           hours -= 12;
@@ -220,7 +219,7 @@ class _InwardListState extends State<InwardList> {
                   )
               ),
               body: CustomLoader(
-                  inAsyncCall: loading,
+                inAsyncCall: loading,
                 child: AdaptiveScrollbar(
                   underColor: Colors.blueGrey.withOpacity(0.3),
                   sliderDefaultColor: Colors.grey.withOpacity(0.7),
@@ -304,35 +303,35 @@ class _InwardListState extends State<InwardList> {
                                               SizedBox(
                                                 height: 30,
                                                 width: 150,
-                                               child: TextFormField(
-                                                 style: const TextStyle(fontSize: 11),
-                                                 controller: searchGateInNo,
-                                                 decoration: searchGateInNoDecoration(hintText: "Search Gate Inward No"),
-                                                 onChanged: (value) {
-                                                   if(value.isEmpty || value == ""){
-                                                     startVal = 0;
-                                                     filteredList = [];
-                                                     setState(() {
-                                                       if(inwardList.length > 1000){
-                                                         for(int i=0; i < startVal + 1000; i++){
-                                                           filteredList.add(inwardList[i]);
-                                                         }
-                                                       } else{
-                                                         for(int i=0; i < inwardList.length; i++){
-                                                           filteredList.add(inwardList[i]);
-                                                         }
-                                                       }
-                                                     });
-                                                   } else{
-                                                     startVal = 0;
-                                                     filteredList = [];
-                                                     searchEntryDate.clear();
-                                                     searchPONo.clear();
-                                                     searchCancel.clear();
-                                                     fetchGateInNo(searchGateInNo.text);
-                                                   }
-                                                 },
-                                               ),
+                                                child: TextFormField(
+                                                  style: const TextStyle(fontSize: 11),
+                                                  controller: searchGateInNo,
+                                                  decoration: searchGateInNoDecoration(hintText: "Search Gate Inward No"),
+                                                  onChanged: (value) {
+                                                    if(value.isEmpty || value == ""){
+                                                      startVal = 0;
+                                                      filteredList = [];
+                                                      setState(() {
+                                                        if(inwardList.length > 1000){
+                                                          for(int i=0; i < startVal + 1000; i++){
+                                                            filteredList.add(inwardList[i]);
+                                                          }
+                                                        } else{
+                                                          for(int i=0; i < inwardList.length; i++){
+                                                            filteredList.add(inwardList[i]);
+                                                          }
+                                                        }
+                                                      });
+                                                    } else{
+                                                      startVal = 0;
+                                                      filteredList = [];
+                                                      searchEntryDate.clear();
+                                                      searchPONo.clear();
+                                                      searchCancel.clear();
+                                                      fetchGateInNo(searchGateInNo.text);
+                                                    }
+                                                  },
+                                                ),
                                               ),
                                               const SizedBox(width: 20,),
                                               SizedBox(
@@ -613,7 +612,7 @@ class _InwardListState extends State<InwardList> {
                                                               ),
                                                             ),
                                                           ),
-                                                           Center(
+                                                          Center(
                                                             child: Padding(
                                                               padding: const EdgeInsets.only(top: 4.0,right: 25),
                                                               child: SizedBox(
@@ -632,28 +631,28 @@ class _InwardListState extends State<InwardList> {
                                                               ),
                                                             ),
                                                           ),
-                                                           Center(
-                                                             child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0, right: 25),
-                                                            child: SizedBox(
-                                                              // width: 100,
-                                                              child: InkWell(
-                                                                hoverColor: Colors.transparent,
-                                                                onTap: () {
-                                                                  Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditInward(
-                                                                    drawerWidth: drawerWidth,
-                                                                    selectedDestination: widget.selectedDestination,
-                                                                    inwardMap: filteredList[i],
-                                                                    plantValue: widget.plantValue,
-                                                                  ),));
-                                                                },
-                                                                child: const Icon(size: 18,
-                                                                  Icons.arrow_circle_right,
-                                                                  color: Colors.blue,
+                                                          Center(
+                                                            child: Padding(
+                                                              padding: const EdgeInsets.only(top: 4.0, right: 25),
+                                                              child: SizedBox(
+                                                                // width: 100,
+                                                                child: InkWell(
+                                                                  hoverColor: Colors.transparent,
+                                                                  onTap: () {
+                                                                    Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditInward(
+                                                                      drawerWidth: drawerWidth,
+                                                                      selectedDestination: widget.selectedDestination,
+                                                                      inwardMap: filteredList[i],
+                                                                      plantValue: widget.plantValue,
+                                                                    ),));
+                                                                  },
+                                                                  child: const Icon(size: 18,
+                                                                    Icons.arrow_circle_right,
+                                                                    color: Colors.blue,
+                                                                  ),
                                                                 ),
                                                               ),
-                                                            ),
-                                                          ),)
+                                                            ),)
                                                         ],
                                                       ),
                                                     ),
@@ -846,5 +845,4 @@ class _InwardListState extends State<InwardList> {
       });
     }
   }
-
 }

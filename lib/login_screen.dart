@@ -204,8 +204,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future postLogin(TextEditingController userName, TextEditingController password, TextEditingController plant) async{
     String url = "${StaticData.apiURL}/YY1_USERCRED_CDS/YY1_USERCRED?filter=UserName eq '${userName.text}' and Password eq '${password.text}'";
-    print('------- login url ---------');
-    print(url);;
     try{
       final response = await http.get(
         Uri.parse(url),
@@ -218,8 +216,6 @@ class _LoginScreenState extends State<LoginScreen> {
         Map responseData ={};
         try{
           responseData= jsonDecode(response.body);
-          print('------- login ----------');
-          print(responseData);
           if(responseData.containsKey("d") && responseData["d"]["results"].isNotEmpty){
             String plantValue = responseData["d"]["results"][0]["Plant"];
             SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -1,10 +1,16 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'dart:html' as html;
 import 'package:adaptive_scrollbar/adaptive_scrollbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:jml/home/home_screen.dart';
 import 'package:jml/outward/add_outward.dart';
 import 'package:jml/outward/edit_outward.dart';
+import 'package:jml/utils/config.dart';
 import 'package:jml/utils/custom_loader.dart';
-
+import 'package:http/http.dart' as http;
+import '../pdf_inward/outward_pdf_generator.dart';
 import '../utils/custom_appbar.dart';
 import '../utils/custom_drawer.dart';
 import '../utils/jml_colors.dart';
@@ -34,91 +40,146 @@ class _OutwardListState extends State<OutwardList> {
   final searchVehicleOutTime = TextEditingController();
   final searchInvoiceNo = TextEditingController();
   final searchInvoiceDate = TextEditingController();
-  final searchEntryDate = TextEditingController();
   final searchEntryTime = TextEditingController();
+
+  final searchGateOutNo = TextEditingController();
+  final searchSupplierName = TextEditingController();
+  final searchPONo = TextEditingController();
+  final searchEntryDate = TextEditingController();
+  final searchCancel = TextEditingController();
 
   List filteredList = [];
   int startVal=0;
   bool loading = false;
-  List outwardList = [
-    {
-      "gateOutwardNo": "GO001",
-      "entryDate": "25-03-2024",
-      "entryTime": "09:30 AM",
-      "plant": "Plant A",
-      "vehicleNo": "ABC123",
-      "vehicleOutTime": "05:45 PM",
-      "invoiceNo": "INV001",
-      "invoiceDate": "24-03-2024",
-      "supplierCode": "SUP001",
-      "supplierName": "Supplier X",
-      "invoiceType": "Type A",
-      "entredBy": "John Doe",
-      "remarks": "Delivered goods to customer",
-    },
-    {
-      "gateOutwardNo": "GO002",
-      "entryDate": "26-03-2024",
-      "entryTime": "10:15 AM",
-      "plant": "Plant B",
-      "vehicleNo": "XYZ789",
-      "vehicleOutTime": "03:30 PM",
-      "invoiceNo": "INV002",
-      "invoiceDate": "25-03-2024",
-      "supplierCode": "SUP002",
-      "supplierName": "Supplier Y",
-      "invoiceType": "Type B",
-      "entredBy": "Jane Smith",
-      "remarks": "Shipped products to warehouse",
-    },
-    {
-      "gateOutwardNo": "GO003",
-      "entryDate": "27-03-2024",
-      "entryTime": "11:00 AM",
-      "plant": "Plant C",
-      "vehicleNo": "DEF456",
-      "vehicleOutTime": "06:00 PM",
-      "invoiceNo": "INV003",
-      "invoiceDate": "26-03-2024",
-      "supplierCode": "SUP003",
-      "supplierName": "Supplier Z",
-      "invoiceType": "Type C",
-      "entredBy": "Alice Johnson",
-      "remarks": "Dispatched order to customer",
-    },
-    {
-      "gateOutwardNo": "GO004",
-      "entryDate": "28-03-2024",
-      "entryTime": "09:45 AM",
-      "plant": "Plant D",
-      "vehicleNo": "GHI789",
-      "vehicleOutTime": "04:15 PM",
-      "invoiceNo": "INV004",
-      "invoiceDate": "27-03-2024",
-      "supplierCode": "SUP004",
-      "supplierName": "Supplier W",
-      "invoiceType": "Type D",
-      "entredBy": "Bob Williams",
-      "remarks": "Distributed goods to retailers",
-    },
-  ];
+  List outwardList = [];
   late double drawerWidth;
+  String formatTime(String timeString) {
+    try {
+      String timeWithoutPT = timeString.substring(2);
+      int hours = int.parse(timeWithoutPT.substring(0, 2));
+      int minutes = int.parse(timeWithoutPT.substring(3, 5));
+      String meridian = 'AM';
+      if (hours >= 12) {
+        if (hours > 12) {
+          hours -= 12;
+        }
+        meridian = 'PM';
+      }
 
+      String formattedTime = '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')} $meridian';
+
+      return formattedTime;
+    } catch (e) {
+      print('Error formatting time: $e');
+      return '';
+    }
+  }
+Future getOutwardListApi()async{
+  String url = "${StaticData.apiURL}/YY1_GATEENTRYOUT_CDS/YY1_GATEENTRYOUT?filter=Plant eq '${widget.plantValue}'&orderby=GateOutwardNo desc";
+  print('----- get out list url ---------');
+  print(url);
+  try{
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': StaticData.basicAuth,
+      },
+    );
+    if(response.statusCode == 200){
+      loading = true;
+      Map tempData = jsonDecode(response.body);
+      List results = tempData["d"]["results"];
+      outwardList.clear();
+      for(var result in results){
+        Map outWardData = {
+          "GateOutwardNo": result['GateOutwardNo'],
+          "EntryDate": result['EntryDate'],
+          "EntryTime": formatTime(result['EntryTime']),
+          "Plant": result['Plant'],
+          "VehicleNumber":  result['VehicleNumber'],
+          "VehicleOuttime": formatTime(result['VehicleOuttime']),
+          "InvoiceNo": result['InvoiceNo'],
+          "InvoiceDate": result['InvoiceDate'],
+          "SupplierCode": result['SupplierCode'],
+          "SupplierName": result['SupplierName'],
+          "PurchaseOrderNo": result['PurchaseOrderNo'],
+          "Cancelled": result['Cancelled'],
+          "EnteredBy": result['EnteredBy'],
+          "Remarks": result['Remarks'],
+          'SAP_UUID': result['SAP_UUID'],
+        };
+        setState(() {
+          outwardList.add(outWardData);
+          loading = false;
+          print('------- outward data ------');
+          print(outwardList);
+        });
+      }
+      if (outwardList.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No Data found!')),
+        );
+      }
+    }
+  }catch(e){
+    print('Error occurred in API: $e');
+  }
+}
+  String _formatDate(String dateString) {
+    try {
+      int milliseconds = int.parse(dateString.substring(6, dateString.length - 2));
+      DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+      String formattedDate = DateFormat('dd-MM-yyyy').format(dateTime);
+      return formattedDate;
+    } catch (e) {
+      print('Error formatting date: $e');
+      return '';
+    }
+  }
+  Future downloadJmiPdf(Map filteredList)async{
+
+    final Uint8List pdfBytes = await outwardPdfGen(filteredList);
+
+    // Create a blob from the PDF bytes
+    final blob = html.Blob([pdfBytes]);
+
+    final url = html.Url.createObjectUrlFromBlob(blob);
+
+    // Create a download link
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute("download", "${filteredList['GateInwardNo']??""} .pdf")
+      ..text = "Download PDF";
+
+    // Append the anchor element to the body
+    html.document.body?.append(anchor);
+
+    // Click the anchor to initiate download.
+    anchor.click();
+
+    // Clean up resources
+    html.Url.revokeObjectUrl(url);
+    anchor.remove();
+  }
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    if(filteredList.isEmpty){
-      if(outwardList.length > 15){
-        for(int i=0; i<startVal+15; i++){
-          filteredList.add(outwardList[i]);
+    getOutwardListApi().then((value) {
+      if(filteredList.isEmpty){
+        if(outwardList.length > 1000){
+          for(int i=0; i<startVal + 1000; i++){
+            filteredList.add(outwardList[i]);
+          }
+        } else{
+          for(int i=0; i< outwardList.length; i++){
+            filteredList.add(outwardList[i]);
+          }
         }
-      } else{
-        for(int i=0; i<outwardList.length; i++){
-          filteredList.add(outwardList[i]);
-        }
+        setState(() {
+          loading = false;
+        });
       }
-    }
+    });
     drawerWidth = 60.0;
   }
 
@@ -147,6 +208,16 @@ class _OutwardListState extends State<OutwardList> {
                       shadowColor: Colors.black,
                       title: const Text("Outward List"),
                       centerTitle: true,
+                      leading: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                              PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(
+                                  drawerWidth: widget.drawerWidth,
+                                  selectedDestination: widget.selectedDestination,
+                                  plantValue: widget.plantValue),));
+                        },
+                        child: const Icon(Icons.arrow_back),
+                      ),
                     ),
                   )
               ),
@@ -234,15 +305,15 @@ class _OutwardListState extends State<OutwardList> {
                                               width: 150,
                                               child: TextFormField(
                                                 style: const TextStyle(fontSize: 11),
-                                                controller: searchVehicleNo,
-                                                decoration: searchVehicleNoDecoration(hintText: "Search Vehicle No"),
+                                                controller: searchGateOutNo,
+                                                decoration: searchGateOutDecoration(hintText: "Search Gate Outward No"),
                                                 onChanged: (value) {
                                                   if(value.isEmpty || value == ""){
                                                     startVal = 0;
                                                     filteredList = [];
                                                     setState(() {
-                                                      if(outwardList.length > 15){
-                                                        for(int i=0; i < startVal + 15; i++){
+                                                      if(outwardList.length > 1000){
+                                                        for(int i=0; i < startVal + 1000; i++){
                                                           filteredList.add(outwardList[i]);
                                                         }
                                                       } else{
@@ -254,7 +325,46 @@ class _OutwardListState extends State<OutwardList> {
                                                   } else{
                                                     startVal = 0;
                                                     filteredList = [];
-                                                    fetchVehicleNo(searchVehicleNo.text);
+                                                    searchEntryDate.clear();
+                                                    searchInvoiceNo.clear();
+                                                    searchCancel.clear();
+                                                    searchSupplierName.clear();
+                                                    fetchGateOutNo(searchGateOutNo.text);
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                            const SizedBox(width: 20,),
+                                            SizedBox(
+                                              height: 30,
+                                              width: 150,
+                                              child: TextFormField(
+                                                style: const TextStyle(fontSize: 11),
+                                                controller: searchSupplierName,
+                                                decoration: searchSupplierNameDecoration(hintText: "Search Supplier Name"),
+                                                onChanged: (value) {
+                                                  if(value.isEmpty || value == ""){
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    setState(() {
+                                                      if(outwardList.length > 1000){
+                                                        for(int i=0; i < startVal + 1000; i++){
+                                                          filteredList.add(outwardList[i]);
+                                                        }
+                                                      } else{
+                                                        for(int i=0; i < outwardList.length; i++){
+                                                          filteredList.add(outwardList[i]);
+                                                        }
+                                                      }
+                                                    });
+                                                  } else{
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    searchGateOutNo.clear();
+                                                    searchInvoiceNo.clear();
+                                                    searchEntryDate.clear();
+                                                    searchCancel.clear();
+                                                    fetchSupplierName(searchSupplierName.text);
                                                   }
                                                 },
                                               ),
@@ -272,8 +382,8 @@ class _OutwardListState extends State<OutwardList> {
                                                     startVal = 0;
                                                     filteredList = [];
                                                     setState(() {
-                                                      if(outwardList.length > 15){
-                                                        for(int i=0; i < startVal + 15; i++){
+                                                      if(outwardList.length > 1000){
+                                                        for(int i=0; i < startVal + 1000; i++){
                                                           filteredList.add(outwardList[i]);
                                                         }
                                                       } else{
@@ -285,35 +395,12 @@ class _OutwardListState extends State<OutwardList> {
                                                   } else{
                                                     startVal = 0;
                                                     filteredList = [];
+                                                    searchCancel.clear();
+                                                    searchEntryDate.clear();
+                                                    searchGateOutNo.clear();
+                                                    searchSupplierName.clear();
                                                     fetchInvoiceNo(searchInvoiceNo.text);
                                                   }
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 20, top: 0, bottom: 10),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(
-                                              height: 30,
-                                              width: 150,
-                                              child: TextFormField(
-                                                style: const TextStyle(fontSize: 11),
-                                                controller: searchInvoiceDate,
-                                                decoration: invoiceDateFieldDecoration(controller: searchInvoiceDate, hintText: "Select Invoice Date"),
-                                                onTap: () {
-                                                  setState(() {
-                                                    if(searchInvoiceDate.text.isEmpty || searchInvoiceDate.text == ""){
-                                                      startVal = 0;
-                                                      filteredList = outwardList;
-                                                    }
-                                                    selectInvoiceDate(context: context);
-                                                    searchVehicleNo.clear();
-                                                  });
                                                 },
                                               ),
                                             ),
@@ -332,33 +419,10 @@ class _OutwardListState extends State<OutwardList> {
                                                       filteredList = outwardList;
                                                     }
                                                     selectEntryDate(context: context);
-                                                    // searchVehicleNo.clear();
-                                                  });
-                                                },
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 20, top: 0, bottom: 10),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(
-                                              height: 30,
-                                              width: 150,
-                                              child: TextFormField(
-                                                style: const TextStyle(fontSize: 11),
-                                                controller: searchEntryTime,
-                                                decoration: entryTimeFieldDecoration(controller: searchEntryTime, hintText: "Select Entry Time"),
-                                                onTap: () {
-                                                  setState(() {
-                                                    if(searchEntryTime.text.isEmpty || searchEntryTime.text == ""){
-                                                      startVal = 0;
-                                                      filteredList = outwardList;
-                                                    }
-                                                    selectEntryTime(context);
+                                                    searchCancel.clear();
+                                                    searchInvoiceNo.clear();
+                                                    searchGateOutNo.clear();
+                                                    searchSupplierName.clear();
                                                     // searchVehicleNo.clear();
                                                   });
                                                 },
@@ -370,17 +434,32 @@ class _OutwardListState extends State<OutwardList> {
                                               width: 150,
                                               child: TextFormField(
                                                 style: const TextStyle(fontSize: 11),
-                                                controller: searchVehicleOutTime,
-                                                decoration: vehicleInTimeFieldDecoration(controller: searchVehicleOutTime, hintText: "Select Vehicle Out-Time"),
-                                                onTap: () {
-                                                  setState(() {
-                                                    if(searchVehicleOutTime.text.isEmpty || searchVehicleOutTime.text == ""){
-                                                      startVal = 0;
-                                                      filteredList = outwardList;
-                                                    }
-                                                    selectVehicleOutTime(context);
-                                                    // searchVehicleNo.clear();
-                                                  });
+                                                controller: searchCancel,
+                                                decoration: searchCancelDecoration(hintText: "Search by Cancel"),
+                                                onChanged: (value) {
+                                                  if(value.isEmpty || value == ""){
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    setState(() {
+                                                      if(outwardList.length > 15){
+                                                        for(int i=0; i < startVal + 15; i++){
+                                                          filteredList.add(outwardList[i]);
+                                                        }
+                                                      } else{
+                                                        for(int i=0; i < outwardList.length; i++){
+                                                          filteredList.add(outwardList[i]);
+                                                        }
+                                                      }
+                                                    });
+                                                  } else{
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    searchGateOutNo.clear();
+                                                    searchInvoiceNo.clear();
+                                                    searchEntryDate.clear();
+                                                    searchSupplierName.clear();
+                                                    fetchCancel(searchCancel.text);
+                                                  }
                                                 },
                                               ),
                                             ),
@@ -402,7 +481,7 @@ class _OutwardListState extends State<OutwardList> {
                                                   child: SizedBox(
                                                     height: 25,
                                                     // width: 150,
-                                                    child: Text("Gate Outward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                    child: Center(child: Text("Gate Outward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
                                                   ),
                                                 ),
                                               ),
@@ -412,7 +491,7 @@ class _OutwardListState extends State<OutwardList> {
                                                   child: SizedBox(
                                                     height: 25,
                                                     // width: 150,
-                                                    child: Text("Vehicle Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                    child: Center(child: Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
                                                   ),
                                                 ),
                                               ),
@@ -422,7 +501,7 @@ class _OutwardListState extends State<OutwardList> {
                                                   child: SizedBox(
                                                     height: 25,
                                                     // width: 150,
-                                                    child: Text("Vehicle Out-Time",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                    child: Center(child: Text("Invoice Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
                                                   ),
                                                 ),
                                               ),
@@ -432,7 +511,7 @@ class _OutwardListState extends State<OutwardList> {
                                                   child: SizedBox(
                                                     height: 25,
                                                     // width: 150,
-                                                    child: Text("Invoice No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                    child: Center(child: Text("Entry Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
                                                   ),
                                                 ),
                                               ),
@@ -442,7 +521,7 @@ class _OutwardListState extends State<OutwardList> {
                                                   child: SizedBox(
                                                     height: 25,
                                                     // width: 150,
-                                                    child: Text("Invoice Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                    child: Center(child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
                                                   ),
                                                 ),
                                               ),
@@ -451,18 +530,28 @@ class _OutwardListState extends State<OutwardList> {
                                                   padding: EdgeInsets.only(top: 4.0),
                                                   child: SizedBox(
                                                     height: 25,
-                                                    width: 150,
-                                                    child: Text("Invoice Type",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                    // width: 150,
+                                                    child: Center(child: Text("Download PDF",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
                                                   ),
                                                 ),
                                               ),
-                                              Center(child: Padding(
-                                                padding: EdgeInsets.only(right: 8),
-                                                child: Icon(size: 18,
-                                                  Icons.more_vert,
-                                                  color: Colors.transparent,
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(top: 4.0),
+                                                  child: SizedBox(
+                                                    height: 25,
+                                                    // width: 150,
+                                                    child: Center(child: Text("View",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
+                                                  ),
                                                 ),
-                                              ),)
+                                              ),
+                                              // Center(child: Padding(
+                                              //   padding: EdgeInsets.only(right: 8),
+                                              //   child: Icon(size: 18,
+                                              //     Icons.more_vert,
+                                              //     color: Colors.transparent,
+                                              //   ),
+                                              // ),)
                                             ],
                                           ),
                                         ),
@@ -479,12 +568,7 @@ class _OutwardListState extends State<OutwardList> {
                                                 MaterialButton(
                                                   hoverColor: Colors.blue[50],
                                                   onPressed: () {
-                                                    Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditOutward(
-                                                        drawerWidth: drawerWidth,
-                                                        selectedDestination: widget.selectedDestination,
-                                                      outwardList: filteredList[i],
-                                                      plantValue: widget.plantValue,
-                                                    ),));
+
                                                   },
                                                   child: Padding(
                                                     padding: const EdgeInsets.only(left: 18.0,top: 4,bottom: 3),
@@ -496,7 +580,7 @@ class _OutwardListState extends State<OutwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['gateOutwardNo']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Center(child: Text(filteredList[i]['GateOutwardNo']??"",style: const TextStyle(fontSize: 11))),
                                                             ),
                                                           ),
                                                         ),
@@ -505,7 +589,7 @@ class _OutwardListState extends State<OutwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['vehicleNo']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Center(child: Text(filteredList[i]['SupplierName']??"",style: const TextStyle(fontSize: 11))),
                                                             ),
                                                           ),
                                                         ),
@@ -514,7 +598,7 @@ class _OutwardListState extends State<OutwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['vehicleOutTime']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Center(child: Text(filteredList[i]['InvoiceNo']??"",style: const TextStyle(fontSize: 11))),
                                                             ),
                                                           ),
                                                         ),
@@ -523,7 +607,7 @@ class _OutwardListState extends State<OutwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['invoiceNo']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Center(child: Text(filteredList[i]['EntryDate'] != null ? _formatDate(outwardList[i]['EntryDate']):"",style: const TextStyle(fontSize: 11))),
                                                             ),
                                                           ),
                                                         ),
@@ -532,7 +616,7 @@ class _OutwardListState extends State<OutwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['invoiceDate']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Center(child: Text(filteredList[i]['Cancelled']??"",style: const TextStyle(fontSize: 11))),
                                                             ),
                                                           ),
                                                         ),
@@ -541,17 +625,45 @@ class _OutwardListState extends State<OutwardList> {
                                                             padding: const EdgeInsets.only(top: 4.0),
                                                             child: SizedBox(
                                                               // height: 25,
-                                                              child: Text(filteredList[i]['invoiceType']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Center(
+                                                                child: InkWell(
+                                                                  onTap: () {
+                                                                    downloadJmiPdf(filteredList[i]);
+                                                                  },
+                                                                  child: const Icon(Icons.download,size: 16,color: Colors.blue),
+                                                                ),
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
-                                                        const Center(child: Padding(
-                                                          padding: EdgeInsets.only(right: 8),
-                                                          child: Icon(size: 18,
-                                                            Icons.arrow_circle_right,
-                                                            color: Colors.blue,
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(top: 4.0),
+                                                            child: SizedBox(
+                                                              // height: 25,
+                                                              child: Center(
+                                                                child: InkWell(
+                                                                  onTap: () {
+                                                                    Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditOutward(
+                                                                      drawerWidth: drawerWidth,
+                                                                      selectedDestination: widget.selectedDestination,
+                                                                      outwardList: filteredList[i],
+                                                                      plantValue: widget.plantValue,
+                                                                    ),));
+                                                                  },
+                                                                  child: const Icon(Icons.arrow_circle_right,size: 16,color: Colors.blue),
+                                                                ),
+                                                              ),
+                                                            ),
                                                           ),
-                                                        ),)
+                                                        ),
+                                                        // const Center(child: Padding(
+                                                        //   padding: EdgeInsets.only(right: 8),
+                                                        //   child: Icon(size: 18,
+                                                        //     Icons.arrow_circle_right,
+                                                        //     color: Colors.blue,
+                                                        //   ),
+                                                        // ),)
                                                       ],
                                                     ),
                                                   ),
@@ -668,14 +780,58 @@ class _OutwardListState extends State<OutwardList> {
       focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
     );
   }
-
-  searchVehicleNoDecoration({required String hintText, bool? error}){
+  searchCancelDecoration({required String hintText, bool? error}){
     return InputDecoration(
       hoverColor: mHoverColor,
-      suffixIcon: searchVehicleNo.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
+      suffixIcon: searchCancel.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
           onTap: (){
             setState(() {
-              searchVehicleNo.clear();
+              searchCancel.clear();
+              filteredList = outwardList;
+            });
+          },
+          child: const Icon(Icons.close,size: 14,)),
+      border: const OutlineInputBorder(
+          borderSide: BorderSide(color:  Colors.blue)),
+      constraints:  const BoxConstraints(maxHeight:35),
+      hintText: hintText,
+      hintStyle: const TextStyle(fontSize: 11),
+      counterText: '',
+      contentPadding: const EdgeInsets.fromLTRB(12, 00, 0, 0),
+      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :mTextFieldBorder)),
+      focusedBorder:  OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :Colors.blue)),
+    );
+  }
+
+  searchGateOutDecoration({required String hintText, bool? error}){
+    return InputDecoration(
+      hoverColor: mHoverColor,
+      suffixIcon: searchGateOutNo.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
+          onTap: (){
+            setState(() {
+              searchGateOutNo.clear();
+              filteredList = outwardList;
+            });
+          },
+          child: const Icon(Icons.close,size: 14,)),
+      border: const OutlineInputBorder(
+          borderSide: BorderSide(color:  Colors.blue)),
+      constraints:  const BoxConstraints(maxHeight:35),
+      hintText: hintText,
+      hintStyle: const TextStyle(fontSize: 11),
+      counterText: '',
+      contentPadding: const EdgeInsets.fromLTRB(12, 00, 0, 0),
+      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :mTextFieldBorder)),
+      focusedBorder:  OutlineInputBorder(borderSide: BorderSide(color:error==true? mErrorColor :Colors.blue)),
+    );
+  }
+  searchSupplierNameDecoration({required String hintText, bool? error}){
+    return InputDecoration(
+      hoverColor: mHoverColor,
+      suffixIcon: searchSupplierName.text.isEmpty?const Icon(Icons.search,size: 18):InkWell(
+          onTap: (){
+            setState(() {
+              searchSupplierName.clear();
               filteredList = outwardList;
             });
           },
@@ -714,17 +870,31 @@ class _OutwardListState extends State<OutwardList> {
     );
   }
 
-  void fetchVehicleNo(String vehicleNo) {
-    if(outwardList.isNotEmpty && vehicleNo.isNotEmpty){
+  void fetchGateOutNo(String gateOutNo) {
+    if(outwardList.isNotEmpty && gateOutNo.isNotEmpty){
       setState(() {
-        filteredList = outwardList.where((vehicle) => vehicle["vehicleNo"].toLowerCase().contains(vehicleNo.toLowerCase())).toList();
+        filteredList = outwardList.where((outward) => outward["GateOutwardNo"].toLowerCase().contains(gateOutNo.toLowerCase())).toList();
+      });
+    }
+  }
+  void fetchSupplierName(String supplierName) {
+    if(outwardList.isNotEmpty && supplierName.isNotEmpty){
+      setState(() {
+        filteredList = outwardList.where((name) => name["SupplierName"].toLowerCase().contains(supplierName.toLowerCase())).toList();
       });
     }
   }
   void fetchInvoiceNo(String invoiceNo) {
     if(outwardList.isNotEmpty && invoiceNo.isNotEmpty){
       setState(() {
-        filteredList = outwardList.where((invoice) => invoice["invoiceNo"].toLowerCase().contains(invoiceNo.toLowerCase())).toList();
+        filteredList = outwardList.where((po) => po["InvoiceNo"].toLowerCase().contains(invoiceNo.toLowerCase())).toList();
+      });
+    }
+  }
+  void fetchCancel(String cancelled) {
+    if(outwardList.isNotEmpty && cancelled.isNotEmpty){
+      setState(() {
+        filteredList = outwardList.where((cancel) => cancel["Cancelled"].toLowerCase().contains(cancelled.toLowerCase())).toList();
       });
     }
   }
@@ -738,9 +908,10 @@ class _OutwardListState extends State<OutwardList> {
   }
   void fetchEntryDate(DateTime selectedDate){
     if(outwardList.isNotEmpty && selectedDate != null){
-      String formattedDate = "${selectedDate.day}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.year.toString().padLeft(2, '0')}";
+      int milliseconds = selectedDate.millisecondsSinceEpoch + selectedDate.timeZoneOffset.inMilliseconds;
+      String formattedDate = "/Date($milliseconds)/";
       setState(() {
-        filteredList = outwardList.where((item) => item['entryDate'] == formattedDate).toList();
+        filteredList = outwardList.where((item) => item['EntryDate'] == formattedDate).toList();
       });
     }
   }
@@ -790,6 +961,9 @@ class _OutwardListState extends State<OutwardList> {
     String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
     searchEntryDate.text = formattedDate;
     fetchEntryDate(pickedDate);
+    print('------ selectEntryDate -------');
+    print(formattedDate);
+    print(pickedDate);
   }
   TimeOfDay _time = TimeOfDay.now();
   TimeOfDay _time2 = TimeOfDay.now();

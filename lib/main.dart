@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
       ),
       home: initialUserName != null && initialPassword != null && initialPlantValue != null
           ? HomeScreen(drawerWidth: 190, selectedDestination: 0, plantValue: initialPlantValue!)
-          : LoginScreen(),
+          : const LoginScreen(),
     );
   }
 }

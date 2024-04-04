@@ -29,8 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    print('-------- home init ---------');
-    print(widget.plantValue);
   }
   @override
   Widget build(BuildContext context) {

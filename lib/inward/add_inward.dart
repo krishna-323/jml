@@ -157,9 +157,6 @@ class _AddInwardState extends State<AddInward> {
     String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
     entryDateController.text = formattedDate;
     entryDateTime = DateFormat("yyyy-MM-dd").format(pickedDate) + "T00:00:00";
-    print('-------- entry date -------');
-    print(entryDateTime);
-    print(entryDateController.text);
   }
   selectInvoiceDate(BuildContext context) async{
     DateTime? pickedDate = await showDatePicker(
@@ -174,8 +171,6 @@ class _AddInwardState extends State<AddInward> {
     String formattedDate = DateFormat("dd-MM-yyyy").format(pickedDate);
     invoiceDateController.text = formattedDate;
     invoiceDateTime = DateFormat("yyyy-MM-dd").format(pickedDate) + "T00:00:00";
-    print('-------- invoice data -------');
-    print(invoiceDateTime);
   }
   String _formatTime(TimeOfDay time) {
     return 'PT${time.hour}H${time.minute}M00S';
@@ -187,8 +182,6 @@ class _AddInwardState extends State<AddInward> {
     super.initState();
     entryDateController.text = DateFormat("dd-MM-yyyy").format(DateTime.now());
     entryTimeController.text = DateFormat('hh:mm a').format(DateTime.now());
-    print('------ add init entry time ---------');
-    print(entryTimeController.text);
     getGateInNo();
     String entryDate = DateFormat("yyyy-MM-dd").format(DateTime.now());
     entryDateTime = "${entryDate}T00:00:00";
@@ -197,8 +190,6 @@ class _AddInwardState extends State<AddInward> {
     // int minute = int.parse(timeComponents[1].split(' ')[0]);
     // formattedEntryTime = 'PT${hour}H${minute}M00S';
     formattedEntryTime = _formatTime(TimeOfDay.now());
-    print('------ add init formattedEntryTime ---------');
-    print(formattedEntryTime);
     getInitialData();
     canceledController.text = canceledValue1;
     plantController.text = widget.plantValue;
@@ -328,7 +319,7 @@ class _AddInwardState extends State<AddInward> {
                                 "SAP_Description": typeController.text,
                                 "ReceivedBy1": referenceNoController.text
                               };
-                              print('--------- saved inward ----------');
+                              print('--------- add inward --------');
                               print(savedInward);
                               postInwardApi(savedInward, context);
                             },
@@ -827,9 +818,6 @@ class _AddInwardState extends State<AddInward> {
                                                                         setState(() {
                                                                           typeValue1 = value;
                                                                           typeController.text = value;
-                                                                          print('---------- type ----------');
-                                                                          print(typeValue1);
-                                                                          print(typeController.text);
                                                                         });
                                                                       },
                                                                       onCanceled: () {
@@ -875,7 +863,7 @@ class _AddInwardState extends State<AddInward> {
                                                       children: [
                                                         const SizedBox(
                                                             width: 100,
-                                                            child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                            child: Text("Cancelled ?",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                         ),
                                                         SizedBox(
                                                           height: 30,
@@ -1081,8 +1069,6 @@ class _AddInwardState extends State<AddInward> {
 
   Future<List<dynamic>?> getPOData(String supplierCode) async {
     String url = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder";
-    print('---------- po get url ----------');
-    print(url);
     try {
       final response = await http.get(
         Uri.parse(url),
@@ -1106,9 +1092,6 @@ class _AddInwardState extends State<AddInward> {
             tempData['value'] != null) {
           purchaseOrders = tempData['value'];
           poNoList = purchaseOrders.map((order) => order['_PurchaseOrder']['PurchaseOrder']).toSet().toList();
-          // print('------- get po data ----------');
-          // print(purchaseOrders);
-          // print(poNoList);
           return purchaseOrders;
         } else {
           print('Error: Unable to find results in response body');
@@ -1160,8 +1143,6 @@ class _AddInwardState extends State<AddInward> {
       if (response.statusCode == 200) {
         Map tempData = json.decode(response.body);
         List results = tempData['d']['results'];
-        print('-------- result ---------');
-        print(results);
         return results.isNotEmpty;
       }
     } catch (e) {
@@ -1186,8 +1167,6 @@ class _AddInwardState extends State<AddInward> {
       if (response.statusCode == 201) {
         final jsonResponse = json.decode(response.body);
         if (jsonResponse['d'] != null && jsonResponse['d']['SAP_UUID'] != null) {
-          print('-------- post response ---------');
-          print(response.body);
           BuildContext dialogContext = context;
            showDialog(
             context: context,
@@ -1198,7 +1177,7 @@ class _AddInwardState extends State<AddInward> {
                 actions: [
                   TextButton(
                     onPressed: () {
-                      Navigator.of(dialogContext).pop(); // Close the dialog
+                      Navigator.of(dialogContext).pop();
                       Navigator.of(dialogContext).push(PageRouteBuilder(
                         pageBuilder: (context, animation, secondaryAnimation) => InwardList(
                           drawerWidth: widget.drawerWidth,
@@ -1353,9 +1332,6 @@ class _AddInwardState extends State<AddInward> {
                         onTap: () {
                           Navigator.pop(context, supplierCodeList[index]["Supplier"].toString());
                          setState((){
-                           print('------- supplier on tap --------');
-                           print(supplierCodeList[index]["SupplierName"]);
-                           print(poNoList);
                            supplierNameController.text = supplierCodeList[index]["SupplierName"];
                            purchaseOrderController.clear();
                          });
@@ -1417,10 +1393,6 @@ class _AddInwardState extends State<AddInward> {
                             "code": supplierCodeList[index]["Supplier"].toString(),
                           }
                       );
-                      print('------- supplier  name on tap --------');
-                      print(supplierCodeList[index]["SupplierName"]);
-                      print(supplierCodeList[index]["Supplier"]);
-                      print(poNoList);
                       supplierCodeController.text = supplierCodeList[index]["Supplier"];
                     },
                     child: ListTile(
@@ -1527,8 +1499,6 @@ class _AddInwardState extends State<AddInward> {
                       onTap: () {
                         Navigator.pop(context,securityNameList[index]['SecurityName']);
                         enteredByController.text = securityNameList[index]['SecurityName'];
-                        print('--------- security name --------');
-                        print(enteredByController.text);
                       },
                       child: ListTile(
                         title: Text(securityNameList[index]['SecurityName']),

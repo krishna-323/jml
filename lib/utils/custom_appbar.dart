@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../login_screen.dart';
 import 'custom_popup_dropdown.dart';
@@ -93,8 +94,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
                           childWidth: 150,
                           offset: const Offset(1, 40),
                           tooltip: '',
-                          onSelected: (value) {
-                            Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),));
+                          onSelected: (value) async {
+                            SharedPreferences prefs = await SharedPreferences.getInstance();
+                            await prefs.remove('userName');
+                            await prefs.remove('password');
+                            await prefs.remove('plant');
+                            Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(builder: (context) => const LoginScreen()),);
                           },
                           child: Container(),
                         );

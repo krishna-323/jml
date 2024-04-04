@@ -858,7 +858,7 @@ class _EditInwardState extends State<EditInward> {
                                                       children: [
                                                         const SizedBox(
                                                             width: 100,
-                                                            child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                            child: Text("Cancelled ?",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                         ),
                                                         // SizedBox(
                                                         //   height: 30,
