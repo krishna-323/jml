@@ -1503,11 +1503,11 @@ class _AddInwardState extends State<AddInward> {
                               ),
                               SizedBox(
                                   width: 100,
-                                  child: Center(child: Text("Qty",style: TextStyle(fontWeight: FontWeight.bold),))
+                                  child: Center(child: Text("UOM",style: TextStyle(fontWeight: FontWeight.bold),))
                               ),
                               SizedBox(
                                   width: 100,
-                                  child: Center(child: Text("UOM",style: TextStyle(fontWeight: FontWeight.bold),))
+                                  child: Center(child: Text("Qty",style: TextStyle(fontWeight: FontWeight.bold),))
                               ),
                             ],
                           ),

@@ -95,8 +95,6 @@ class _InwardListState extends State<InwardList> {
             loading = false;
           });
         }
-        print('-------- list get api --------');
-        print(inwardList[0]);
       }
     }catch(e){}
   }
@@ -167,9 +165,9 @@ class _InwardListState extends State<InwardList> {
     getInwardList().then((value) {
       if(filteredList.isEmpty){
         if(inwardList.length > inwardList.length){
-          for(int i=0; i<startVal + 1000; i++){
-            filteredList.add(inwardList[i]);
-          }
+          // for(int i=0; i<startVal + 1000; i++){
+          //   filteredList.add(inwardList[i]);
+          // }
         } else{
           for(int i=0; i< inwardList.length; i++){
             filteredList.add(inwardList[i]);
@@ -554,90 +552,86 @@ class _InwardListState extends State<InwardList> {
                                           shrinkWrap: true,
                                           itemCount: filteredList.length,
                                           itemBuilder: (context, i) {
-                                            // print('-------- filteredList[$i] --------');
-                                            // print(_formatDate(filteredList[i]['InvoiceDate']));
-                                            // print(filteredList[i]['InvoiceDate']);
-                                            if(i < filteredList.length){
-                                              return Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  MaterialButton(
-                                                    hoverColor: Colors.blue[50],
-                                                    onPressed: () {
+                                            return Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                MaterialButton(
+                                                  hoverColor: Colors.blue[50],
+                                                  onPressed: () {
 
-                                                    },
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(left: 18.0,top: 4,bottom: 4),
-                                                      child: Row(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Expanded(
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.only(top: 4.0),
-                                                              child: SizedBox(
-                                                                // height: 25,
-                                                                child: Text(filteredList[i]['GateInwardNo']??"",style: const TextStyle(fontSize: 11)),
-                                                              ),
+                                                  },
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(left: 18.0,top: 4,bottom: 4),
+                                                    child: Row(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(top: 4.0),
+                                                            child: SizedBox(
+                                                              // height: 25,
+                                                              child: Text(filteredList[i]['GateInwardNo']??"",style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
-                                                          Expanded(
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.only(top: 4.0),
-                                                              child: SizedBox(
-                                                                // height: 25,
-                                                                child: Text(filteredList[i]['SupplierName']??"",style: const TextStyle(fontSize: 11)),
-                                                              ),
+                                                        ),
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(top: 4.0),
+                                                            child: SizedBox(
+                                                              // height: 25,
+                                                              child: Text(filteredList[i]['SupplierName']??"",style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
-                                                          Expanded(
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.only(top: 4.0),
-                                                              child: SizedBox(
-                                                                // height: 25,
-                                                                child: Text(filteredList[i]['PurchaseOrderNo']??"",style: const TextStyle(fontSize: 11)),
-                                                              ),
+                                                        ),
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(top: 4.0),
+                                                            child: SizedBox(
+                                                              // height: 25,
+                                                              child: Text(filteredList[i]['PurchaseOrderNo']??"",style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
-                                                          Expanded(
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.only(top: 4.0),
-                                                              child: SizedBox(
-                                                                // height: 25,
-                                                                // child: Text(filteredList[i]['EntryDate']??"",style: const TextStyle(fontSize: 11)),
-                                                                child: Text(filteredList[i]['EntryDate'] != null ? _formatDate(filteredList[i]['EntryDate']) : "", style: const TextStyle(fontSize: 11)),
-                                                              ),
+                                                        ),
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(top: 4.0),
+                                                            child: SizedBox(
+                                                              // height: 25,
+                                                              // child: Text(filteredList[i]['EntryDate']??"",style: const TextStyle(fontSize: 11)),
+                                                              child: Text(filteredList[i]['EntryDate'] != null ? _formatDate(filteredList[i]['EntryDate']) : "", style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
-                                                          Expanded(
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.only(top: 4.0),
-                                                              child: SizedBox(
-                                                                // height: 25,
-                                                                child: Text(filteredList[i]['Cancelled']??"",style: const TextStyle(fontSize: 11)),
-                                                              ),
+                                                        ),
+                                                        Expanded(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(top: 4.0),
+                                                            child: SizedBox(
+                                                              // height: 25,
+                                                              child: Text(filteredList[i]['Cancelled']??"",style: const TextStyle(fontSize: 11)),
                                                             ),
                                                           ),
-                                                           Center(
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.only(top: 4.0,right: 25),
-                                                              child: SizedBox(
-                                                                // height: 25,
-                                                                width: 100,
-                                                                child: InkWell(
-                                                                  hoverColor: Colors.transparent,
-                                                                  onTap: () {
-                                                                    downloadJmiPdf(filteredList[i]);
-                                                                  },
-                                                                  child: const Icon(size: 18,
-                                                                    Icons.download,
-                                                                    color: Colors.blue,
-                                                                  ),
+                                                        ),
+                                                        Center(
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.only(top: 4.0,right: 25),
+                                                            child: SizedBox(
+                                                              // height: 25,
+                                                              width: 100,
+                                                              child: InkWell(
+                                                                hoverColor: Colors.transparent,
+                                                                onTap: () {
+                                                                  downloadJmiPdf(filteredList[i]);
+                                                                },
+                                                                child: const Icon(size: 18,
+                                                                  Icons.download,
+                                                                  color: Colors.blue,
                                                                 ),
                                                               ),
                                                             ),
                                                           ),
-                                                           Center(
-                                                             child: Padding(
+                                                        ),
+                                                        Center(
+                                                          child: Padding(
                                                             padding: const EdgeInsets.only(top: 4.0, right: 25),
                                                             child: SizedBox(
                                                               // width: 100,
@@ -658,12 +652,14 @@ class _InwardListState extends State<InwardList> {
                                                               ),
                                                             ),
                                                           ),)
-                                                        ],
-                                                      ),
+                                                      ],
                                                     ),
-                                                  )
-                                                ],
-                                              );
+                                                  ),
+                                                )
+                                              ],
+                                            );
+                                            if(i < filteredList.length){
+
                                             }
                                           },
                                         )
