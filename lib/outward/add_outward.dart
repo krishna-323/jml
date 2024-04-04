@@ -231,45 +231,54 @@ class _AddOutwardState extends State<AddOutward> {
                           child: MaterialButton(
                             color: Colors.blue,
                             onPressed: () {
-                              if (supplierNameController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Select Supplier Name")));
-                                return;
-                              }
-                              if (invoiceDateController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Date")));
-                                return;
-                              }
-                              if (vehicleNoController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Number")));
-                                return;
-                              }
-                              if (vehicleOutTimeController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Out-Time")));
-                                return;
-                              }
-                              if (enteredByController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Security Name")));
-                                return;
-                              }
-                              Map savedOutward = {
-                                "GateOutwardNo": gateOutwardNoController.text,
-                                "EntryDate": entryDateTime,
-                                "EntryTime": formattedEntryTime,
-                                "Plant": plantController.text,
-                                "VehicleNumber": vehicleNoController.text,
-                                "VehicleOuttime": formattedVehicleTime,
-                                "InvoiceNo": invoiceDCNoController.text,
-                                "InvoiceDate": invoiceDateTime,
-                                "SupplierCode": supplierCodeController.text,
-                                "SupplierName": supplierNameController.text,
-                                "PurchaseOrderNo": invoiceDCTypeController.text,
-                                "Cancelled": canceledController.text,
-                                "EnteredBy": enteredByController.text,
-                                "Remarks": remarksController.text,
-                              };
-                              print('-------- saves outward -----------');
-                              print(savedOutward);
-                              postOutWardApi(savedOutward, context);
+                              // if (supplierNameController.text.isEmpty) {
+                              //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Select Supplier Name")));
+                              //   return;
+                              // }
+                              // if (invoiceDateController.text.isEmpty) {
+                              //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Date")));
+                              //   return;
+                              // }
+                              // if (vehicleNoController.text.isEmpty) {
+                              //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Number")));
+                              //   return;
+                              // }
+                              // if (vehicleOutTimeController.text.isEmpty) {
+                              //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Out-Time")));
+                              //   return;
+                              // }
+                              // if (enteredByController.text.isEmpty) {
+                              //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Security Name")));
+                              //   return;
+                              // }
+                              // Map savedOutward = {
+                              //   "GateOutwardNo": gateOutwardNoController.text,
+                              //   "EntryDate": entryDateTime,
+                              //   "EntryTime": formattedEntryTime,
+                              //   "Plant": plantController.text,
+                              //   "VehicleNumber": vehicleNoController.text,
+                              //   "VehicleOuttime": formattedVehicleTime,
+                              //   "InvoiceNo": invoiceDCNoController.text,
+                              //   "InvoiceDate": invoiceDateTime,
+                              //   "SupplierCode": supplierCodeController.text,
+                              //   "SupplierName": supplierNameController.text,
+                              //   "PurchaseOrderNo": invoiceDCTypeController.text,
+                              //   "Cancelled": canceledController.text,
+                              //   "EnteredBy": enteredByController.text,
+                              //   "Remarks": remarksController.text,
+                              // };
+                              // print('-------- saves outward -----------');
+                              // print(savedOutward);
+                              // postOutWardApi(savedOutward, context);
+                              Navigator.of(context).push(
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation, secondaryAnimation) => OutwardList(
+                                        drawerWidth: widget.drawerWidth,
+                                        selectedDestination: widget.selectedDestination,
+                                        plantValue: widget.plantValue
+                                    ),
+                                  )
+                              );
                             },child: const Text("Save",style: TextStyle(color: Colors.white)),),
                         )
                       ],
