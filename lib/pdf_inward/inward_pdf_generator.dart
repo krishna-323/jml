@@ -96,11 +96,13 @@ Future<Uint8List> inwardPdfGen(Map filteredList) async {
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["GateInwardNo"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Entry Date", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
                             Text(convertTimestampToDate(filteredList["EntryDate"]??""), style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Entry Time", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
@@ -114,26 +116,31 @@ Future<Uint8List> inwardPdfGen(Map filteredList) async {
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["SupplierName"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Supplier Code", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["SupplierCode"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Purchase Order No", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["PurchaseOrderNo"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("PO Type", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["ReceivedBy"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Invoice No", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["InvoiceNo"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Invoice Date", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
@@ -147,17 +154,19 @@ Future<Uint8List> inwardPdfGen(Map filteredList) async {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 20),
+                          SizedBox(height: 30),
                           Row(children: [
                             Container(width: textWidth,child: Text("Plant", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["Plant"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Vehicle Number", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["VehicleNumber"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Vehicle In-time", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
@@ -171,6 +180,7 @@ Future<Uint8List> inwardPdfGen(Map filteredList) async {
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["SAP_Description"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Reference Number", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
@@ -197,12 +207,13 @@ Future<Uint8List> inwardPdfGen(Map filteredList) async {
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["EnteredBy"]??""}", style: fontSize9),
                           ]),
+                          SizedBox(height: 5),
                           Row(children: [
                             Container(width: textWidth,child: Text("Remarks", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
                             Text("${filteredList["Remarks"]??""}", style: fontSize9),
                           ]),
-                          SizedBox(height: 10),
+                          SizedBox(height: 20),
                           Row(children: [
                             Container(width: textWidth,child: Text("Received By", style: fontSize9),),
                             SizedBox(width: 5,child: Text(":")),
