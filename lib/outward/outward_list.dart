@@ -136,30 +136,30 @@ Future getOutwardListApi()async{
       return '';
     }
   }
-  Future downloadJmiPdf(Map filteredList)async{
-
-    final Uint8List pdfBytes = await outwardPdfGen(filteredList);
-
-    // Create a blob from the PDF bytes
-    final blob = html.Blob([pdfBytes]);
-
-    final url = html.Url.createObjectUrlFromBlob(blob);
-
-    // Create a download link
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute("download", "${filteredList['GateInwardNo']??""} .pdf")
-      ..text = "Download PDF";
-
-    // Append the anchor element to the body
-    html.document.body?.append(anchor);
-
-    // Click the anchor to initiate download.
-    anchor.click();
-
-    // Clean up resources
-    html.Url.revokeObjectUrl(url);
-    anchor.remove();
-  }
+  // Future downloadJmiPdf(Map filteredList)async{
+  //
+  //   final Uint8List pdfBytes = await outwardPdfGen(filteredList);
+  //
+  //   // Create a blob from the PDF bytes
+  //   final blob = html.Blob([pdfBytes]);
+  //
+  //   final url = html.Url.createObjectUrlFromBlob(blob);
+  //
+  //   // Create a download link
+  //   final anchor = html.AnchorElement(href: url)
+  //     ..setAttribute("download", "${filteredList['GateInwardNo']??""} .pdf")
+  //     ..text = "Download PDF";
+  //
+  //   // Append the anchor element to the body
+  //   html.document.body?.append(anchor);
+  //
+  //   // Click the anchor to initiate download.
+  //   anchor.click();
+  //
+  //   // Clean up resources
+  //   html.Url.revokeObjectUrl(url);
+  //   anchor.remove();
+  // }
   @override
   void initState() {
     // TODO: implement initState
@@ -628,7 +628,7 @@ Future getOutwardListApi()async{
                                                               child: Center(
                                                                 child: InkWell(
                                                                   onTap: () {
-                                                                    downloadJmiPdf(filteredList[i]);
+                                                                    // downloadJmiPdf(filteredList[i]);
                                                                   },
                                                                   child: const Icon(Icons.download,size: 16,color: Colors.blue),
                                                                 ),

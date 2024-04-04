@@ -1068,16 +1068,17 @@ class _AddInwardState extends State<AddInward> {
 
 
   Future<List<dynamic>?> getPOData(String supplierCode) async {
-    String url = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder";
+    // String url = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder";
+    String url2 = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrderItem&expand=_PurchaseOrder,_PurchaseOrderItem";
     try {
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse(url2),
         headers: {'Authorization': StaticData.basicAuth},
       );
       if (response.statusCode == 200) {
         Map<String, dynamic>? tempData = json.decode(response.body);
-        if(tempData!['value'].isEmpty || tempData['value'] == null){
-          if(mounted){
+        if (tempData!['value'].isEmpty || tempData['value'] == null) {
+          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No PO Number !')));
           }
           setState(() {
@@ -1086,12 +1087,11 @@ class _AddInwardState extends State<AddInward> {
             purchaseOrders = [];
             poNoList = [];
           });
-        }
-        else if (tempData != null &&
+        } else if (tempData != null &&
             tempData.containsKey('value') &&
             tempData['value'] != null) {
           purchaseOrders = tempData['value'];
-          poNoList = purchaseOrders.map((order) => order['_PurchaseOrder']['PurchaseOrder']).toSet().toList();
+          poNoList = purchaseOrders.map((order) => order['_PurchaseOrderItem']['PurchaseOrder']).toSet().toList();
           return purchaseOrders;
         } else {
           print('Error: Unable to find results in response body');
@@ -1106,6 +1106,7 @@ class _AddInwardState extends State<AddInward> {
       return null;
     }
   }
+
 
   Future getGateInNo() async{
     String url = "${StaticData.apiURL}/YY1_GATEENTRY_CDS/YY1_GATEENTRY?orderby=GateInwardNo desc";
@@ -1173,7 +1174,7 @@ class _AddInwardState extends State<AddInward> {
             builder: (context) {
               return AlertDialog(
                 title:  Text('GateInwardNo: ${gateInwardNoController.text}'),
-                content:  Text("Data posted successfully"),
+                content:  const Text("Data posted successfully"),
                 actions: [
                   TextButton(
                     onPressed: () {
@@ -1219,7 +1220,7 @@ class _AddInwardState extends State<AddInward> {
             builder: (context) {
               return AlertDialog(
                 title:  Text('GateInwardNo: ${gateInwardNoController.text}'),
-                content:  Text("Instance with the same key already exists"),
+                content:  const Text("Instance with the same key already exists"),
                 actions: [
                   TextButton(
                     onPressed: () {
@@ -1436,7 +1437,7 @@ class _AddInwardState extends State<AddInward> {
                   )
               ),
               SizedBox(
-                width: 500,
+                width: 800,
                 height: 400,
                 child: ListView.builder(
                   shrinkWrap: true,
@@ -1444,6 +1445,41 @@ class _AddInwardState extends State<AddInward> {
                   itemBuilder: (context, index) {
                     var purchaseOrder = poNoList[index];
                     var purchaseOrderType = getPurchaseOrderType(purchaseOrder);
+                    var items = purchaseOrders.where((order) => order['_PurchaseOrderItem']['PurchaseOrder'] == purchaseOrder).toList();
+                    var widgets = <Widget>[];
+
+                    for (var item in items) {
+                      var purchaseOrderItem = item['_PurchaseOrderItem'];
+                      var itemCode = purchaseOrderItem['Material'];
+                      var itemName = purchaseOrderItem['PurchaseOrderItemText'];
+                      var itemQty = purchaseOrderItem['OrderQuantity'];
+                      var itemUom = purchaseOrderItem['PurchaseOrderQuantityUnit'];
+                      // var itemDetails = '$itemCode $itemName $itemUom $itemQty';
+                      widgets.add(
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            SizedBox(
+                              width: 100,
+                                child: Center(child: Text(itemCode))
+                            ),
+                            SizedBox(
+                                width: 400,
+                                child: Center(child: Text(itemName))
+                            ),
+                            SizedBox(
+                                width: 100,
+                                child: Center(child: Text(itemUom))
+                            ),
+                            SizedBox(
+                                width: 100,
+                                child: Center(child: Text(itemQty.toString()))
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                     return InkWell(
                     onTap: () {
                       Navigator.pop(context, purchaseOrder );
@@ -1451,6 +1487,36 @@ class _AddInwardState extends State<AddInward> {
                     },
                     child: ListTile(
                       title: Text(purchaseOrder),
+                      subtitle: Column(
+                        children: [
+                          const Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              SizedBox(
+                                  width: 100,
+                                  child: Center(child: Text("Item Code",style: TextStyle(fontWeight: FontWeight.bold),))
+                              ),
+                              SizedBox(
+                                  width: 400,
+                                  child: Center(child: Text("Item Name",style: TextStyle(fontWeight: FontWeight.bold),))
+                              ),
+                              SizedBox(
+                                  width: 100,
+                                  child: Center(child: Text("Qty",style: TextStyle(fontWeight: FontWeight.bold),))
+                              ),
+                              SizedBox(
+                                  width: 100,
+                                  child: Center(child: Text("UOM",style: TextStyle(fontWeight: FontWeight.bold),))
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: widgets,
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },),
@@ -1538,11 +1604,11 @@ class _AddInwardState extends State<AddInward> {
 
   filterPONo(String searchQuery) {
     if (searchQuery.isEmpty) {
-      poNoList = purchaseOrders.map((order) => order['_PurchaseOrder']['PurchaseOrder']).toSet().toList();
+      poNoList = purchaseOrders.map((order) => order['_PurchaseOrderItem']['PurchaseOrder']).toSet().toList();
     } else {
       poNoList = purchaseOrders
-          .where((order) => order['_PurchaseOrder']['PurchaseOrder'].contains(searchQuery))
-          .map((order) => order['_PurchaseOrder']['PurchaseOrder']).toSet()
+          .where((order) => order['_PurchaseOrderItem']['PurchaseOrder'].contains(searchQuery))
+          .map((order) => order['_PurchaseOrderItem']['PurchaseOrder']).toSet()
           .toList();
     }
   }

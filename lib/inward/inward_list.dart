@@ -166,7 +166,7 @@ class _InwardListState extends State<InwardList> {
 
     getInwardList().then((value) {
       if(filteredList.isEmpty){
-        if(inwardList.length > 1000){
+        if(inwardList.length > inwardList.length){
           for(int i=0; i<startVal + 1000; i++){
             filteredList.add(inwardList[i]);
           }
@@ -313,10 +313,10 @@ class _InwardListState extends State<InwardList> {
                                                      startVal = 0;
                                                      filteredList = [];
                                                      setState(() {
-                                                       if(inwardList.length > 1000){
-                                                         for(int i=0; i < startVal + 1000; i++){
-                                                           filteredList.add(inwardList[i]);
-                                                         }
+                                                       if(inwardList.length > inwardList.length){
+                                                         // for(int i=0; i < startVal + 1000; i++){
+                                                         //   filteredList.add(inwardList[i]);
+                                                         // }
                                                        } else{
                                                          for(int i=0; i < inwardList.length; i++){
                                                            filteredList.add(inwardList[i]);
@@ -329,6 +329,7 @@ class _InwardListState extends State<InwardList> {
                                                      searchEntryDate.clear();
                                                      searchPONo.clear();
                                                      searchCancel.clear();
+                                                     searchSupplierName.clear();
                                                      fetchGateInNo(searchGateInNo.text);
                                                    }
                                                  },
@@ -347,10 +348,10 @@ class _InwardListState extends State<InwardList> {
                                                       startVal = 0;
                                                       filteredList = [];
                                                       setState(() {
-                                                        if(inwardList.length > 1000){
-                                                          for(int i=0; i < startVal + 1000; i++){
-                                                            filteredList.add(inwardList[i]);
-                                                          }
+                                                        if(inwardList.length > inwardList.length){
+                                                          // for(int i=0; i < startVal + 1000; i++){
+                                                          //   filteredList.add(inwardList[i]);
+                                                          // }
                                                         } else{
                                                           for(int i=0; i < inwardList.length; i++){
                                                             filteredList.add(inwardList[i]);
@@ -363,6 +364,7 @@ class _InwardListState extends State<InwardList> {
                                                       searchEntryDate.clear();
                                                       searchPONo.clear();
                                                       searchCancel.clear();
+                                                      searchGateInNo.clear();
                                                       fetchSupplierName(searchSupplierName.text);
                                                     }
                                                   },
@@ -381,10 +383,10 @@ class _InwardListState extends State<InwardList> {
                                                       startVal = 0;
                                                       filteredList = [];
                                                       setState(() {
-                                                        if(inwardList.length > 1000){
-                                                          for(int i=0; i < startVal + 1000; i++){
-                                                            filteredList.add(inwardList[i]);
-                                                          }
+                                                        if(inwardList.length > inwardList.length){
+                                                          // for(int i=0; i < startVal + 1000; i++){
+                                                          //   filteredList.add(inwardList[i]);
+                                                          // }
                                                         } else{
                                                           for(int i=0; i < inwardList.length; i++){
                                                             filteredList.add(inwardList[i]);
@@ -397,6 +399,7 @@ class _InwardListState extends State<InwardList> {
                                                       searchCancel.clear();
                                                       searchEntryDate.clear();
                                                       searchGateInNo.clear();
+                                                      searchSupplierName.clear();
                                                       fetchPoNo(searchPONo.text);
                                                     }
                                                   },
@@ -420,7 +423,7 @@ class _InwardListState extends State<InwardList> {
                                                       searchCancel.clear();
                                                       searchPONo.clear();
                                                       searchGateInNo.clear();
-                                                      // searchVehicleNo.clear();
+                                                      searchSupplierName.clear();
                                                     });
                                                   },
                                                 ),
@@ -435,13 +438,13 @@ class _InwardListState extends State<InwardList> {
                                                   decoration: searchCancelDecoration(hintText: "Search by Cancel"),
                                                   onChanged: (value) {
                                                     if(value.isEmpty || value == ""){
-                                                      startVal = 0;
+                                                      // startVal = 0;
                                                       filteredList = [];
                                                       setState(() {
-                                                        if(inwardList.length > 1000){
-                                                          for(int i=0; i < startVal + 1000; i++){
-                                                            filteredList.add(inwardList[i]);
-                                                          }
+                                                        if(inwardList.length > inwardList.length){
+                                                          // for(int i=0; i < startVal + 1000; i++){
+                                                          //   filteredList.add(inwardList[i]);
+                                                          // }
                                                         } else{
                                                           for(int i=0; i < inwardList.length; i++){
                                                             filteredList.add(inwardList[i]);
@@ -454,6 +457,7 @@ class _InwardListState extends State<InwardList> {
                                                       searchGateInNo.clear();
                                                       searchPONo.clear();
                                                       searchEntryDate.clear();
+                                                      searchSupplierName.clear();
                                                       fetchCancel(searchCancel.text);
                                                     }
                                                   },
