@@ -87,6 +87,7 @@ class _InwardListState extends State<InwardList> {
             'SAP_UUID': result['SAP_UUID'],
             'SAP_Description': result['SAP_Description'],
             'ReceivedBy1': result['ReceivedBy1'],
+            'CreatedBy': result['CreatedBy'],
           };
           setState(() {
             inwardList.add(inwardData);

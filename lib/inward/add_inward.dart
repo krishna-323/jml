@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:jml/inward/inward_list.dart';
 import 'package:jml/utils/custom_loader.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/config.dart';
 import '../utils/custom_appbar.dart';
 import '../utils/custom_drawer.dart';
@@ -175,6 +176,14 @@ class _AddInwardState extends State<AddInward> {
   String _formatTime(TimeOfDay time) {
     return 'PT${time.hour}H${time.minute}M00S';
   }
+  String? userName;
+  Future<void> getLoginData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('userName');
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -193,6 +202,7 @@ class _AddInwardState extends State<AddInward> {
     getInitialData();
     canceledController.text = canceledValue1;
     plantController.text = widget.plantValue;
+    getLoginData();
   }
 
   Future getInitialData() async{
@@ -257,7 +267,6 @@ class _AddInwardState extends State<AddInward> {
                           child: MaterialButton(
                             color: Colors.blue,
                             onPressed: () async {
-                              // Check if the user selected Customer or Supplier
                               if (typeController.text == 'Customer' || typeController.text == 'Supplier') {
                                 if (referenceNoController.text.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Reference Number")));
@@ -278,24 +287,34 @@ class _AddInwardState extends State<AddInward> {
                                 }
                                 bool invoiceExists = await isInvoiceNoExists(supplierCodeController.text, invoiceNoController.text);
                                 if (invoiceExists && supplierCodeController.text.isNotEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invoice Number already exists for this Supplier")));
+                                  if(mounted){
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invoice Number already exists for this Supplier")));
+                                  }
                                   return;
                                 }
                               }
                               if (invoiceDateController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Date")));
+                                if(mounted){
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Invoice Date")));
+                                }
                                 return;
                               }
                               if (vehicleNoController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Number")));
+                                if(mounted){
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle Number")));
+                                }
                                 return;
                               }
                               if (vehicleInTimeController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle In-Time")));
+                                if(mounted){
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Vehicle In-Time")));
+                                }
                                 return;
                               }
                               if (enteredByController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Security Name")));
+                                if(mounted){
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Enter Security Name")));
+                                }
                                 return;
                               }
 
@@ -317,7 +336,8 @@ class _AddInwardState extends State<AddInward> {
                                 "Cancelled": canceledController.text,
                                 "ReceivedBy": poTypeController.text,
                                 "SAP_Description": typeController.text,
-                                "ReceivedBy1": referenceNoController.text
+                                "ReceivedBy1": referenceNoController.text,
+                                "CreatedBy": userName,
                               };
                               print('--------- add inward --------');
                               print(savedInward);
@@ -782,7 +802,7 @@ class _AddInwardState extends State<AddInward> {
                                               children: [
                                                 const Padding(
                                                   padding: EdgeInsets.all(8.0),
-                                                  child: SizedBox(height: 30,child: Text("Other the PO Items",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.blue),)),
+                                                  child: SizedBox(height: 30,child: Text("Other than PO Items",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.blue),)),
                                                 ),
                                                 Padding(
                                                   padding: const EdgeInsets.all(8),
@@ -1077,7 +1097,6 @@ class _AddInwardState extends State<AddInward> {
 
 
   Future<List<dynamic>?> getPOData(String supplierCode) async {
-    // String url = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder";
     String url2 = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrderItem&expand=_PurchaseOrder,_PurchaseOrderItem";
     try {
       final response = await http.get(
@@ -1508,7 +1527,7 @@ class _AddInwardState extends State<AddInward> {
                   )
               ),
               SizedBox(
-                width: 1000,
+                width: 1100,
                 height: 400,
                 child: ListView.builder(
                   shrinkWrap: true,
@@ -1527,12 +1546,16 @@ class _AddInwardState extends State<AddInward> {
                       var itemUom = purchaseOrderItem['PurchaseOrderQuantityUnit'];
                       var itemPrice = purchaseOrderItem['NetPriceAmount'];
                       var itemGrossAmt = purchaseOrderItem['GrossAmount'];
-                      // var itemDetails = '$itemCode $itemName $itemUom $itemQty';
+                      var poLineId = purchaseOrderItem['PurchaseOrderItem'];
                       widgets.add(
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            SizedBox(
+                                width: 100,
+                                child: Center(child: Text(poLineId.toString()))
+                            ),
                             SizedBox(
                               width: 100,
                                 child: Center(child: Text(itemCode))
@@ -1574,6 +1597,10 @@ class _AddInwardState extends State<AddInward> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              SizedBox(
+                                  width: 100,
+                                  child: Center(child: Text("Line No",style: TextStyle(fontWeight: FontWeight.bold),))
+                              ),
                               SizedBox(
                                   width: 100,
                                   child: Center(child: Text("Item Code",style: TextStyle(fontWeight: FontWeight.bold),))

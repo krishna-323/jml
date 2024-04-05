@@ -50,7 +50,7 @@ class _OutwardListState extends State<OutwardList> {
 
   List filteredList = [];
   int startVal=0;
-  bool loading = false;
+  bool loading = true;
   List outwardList = [];
   late double drawerWidth;
   String formatTime(String timeString) {
@@ -86,7 +86,9 @@ Future getOutwardListApi()async{
       },
     );
     if(response.statusCode == 200){
-      loading = true;
+     setState(() {
+       loading = false;
+     });
       Map tempData = jsonDecode(response.body);
       List results = tempData["d"]["results"];
       outwardList.clear();
@@ -116,12 +118,18 @@ Future getOutwardListApi()async{
         });
       }
       if (outwardList.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No Data found!')),
-        );
+        setState(() {
+          loading = false;
+        });
+        if(mounted){
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No Data found!')),);
+        }
       }
     }
   }catch(e){
+    setState(() {
+      loading = false;
+    });
     print('Error occurred in API: $e');
   }
 }
@@ -166,10 +174,10 @@ Future getOutwardListApi()async{
     super.initState();
     getOutwardListApi().then((value) {
       if(filteredList.isEmpty){
-        if(outwardList.length > 1000){
-          for(int i=0; i<startVal + 1000; i++){
-            filteredList.add(outwardList[i]);
-          }
+        if(outwardList.length > outwardList.length){
+          // for(int i=0; i<startVal + 1000; i++){
+          //   filteredList.add(outwardList[i]);
+          // }
         } else{
           for(int i=0; i< outwardList.length; i++){
             filteredList.add(outwardList[i]);
@@ -221,465 +229,463 @@ Future getOutwardListApi()async{
                     ),
                   )
               ),
-              body: CustomLoader(
-                inAsyncCall: loading,
+              body: loading ? const Center(child: CircularProgressIndicator(),) :
+              AdaptiveScrollbar(
+                underColor: Colors.blueGrey.withOpacity(0.3),
+                sliderDefaultColor: Colors.grey.withOpacity(0.7),
+                sliderActiveColor: Colors.grey,
+                controller: _verticalScrollController,
                 child: AdaptiveScrollbar(
+                  position: ScrollbarPosition.bottom,
                   underColor: Colors.blueGrey.withOpacity(0.3),
                   sliderDefaultColor: Colors.grey.withOpacity(0.7),
                   sliderActiveColor: Colors.grey,
-                  controller: _verticalScrollController,
-                  child: AdaptiveScrollbar(
-                    position: ScrollbarPosition.bottom,
-                    underColor: Colors.blueGrey.withOpacity(0.3),
-                    sliderDefaultColor: Colors.grey.withOpacity(0.7),
-                    sliderActiveColor: Colors.grey,
-                    controller: _horizontalScrollController,
-                    child: SingleChildScrollView(
-                      controller: _verticalScrollController,
-                      scrollDirection: Axis.vertical,
-                      child: Center(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SingleChildScrollView(
-                              controller: _horizontalScrollController,
-                              scrollDirection: Axis.horizontal,
-                              child: SizedBox(
-                                width: 1200,
-                                child: Card(
-                                  color: Colors.white,
-                                  surfaceTintColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                    side: BorderSide(
-                                        color: mTextFieldBorder.withOpacity(0.8),
-                                        width: 1
-                                    ),
+                  controller: _horizontalScrollController,
+                  child: SingleChildScrollView(
+                    controller: _verticalScrollController,
+                    scrollDirection: Axis.vertical,
+                    child: Center(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SingleChildScrollView(
+                            controller: _horizontalScrollController,
+                            scrollDirection: Axis.horizontal,
+                            child: SizedBox(
+                              width: 1200,
+                              child: Card(
+                                color: Colors.white,
+                                surfaceTintColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  side: BorderSide(
+                                      color: mTextFieldBorder.withOpacity(0.8),
+                                      width: 1
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(right: 20, top: 10, bottom: 10),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            const SizedBox(
-                                              height: 40,
-                                              child: Padding(
-                                                padding: EdgeInsets.only(left: 26,top: 12,right: 0),
-                                                child: Text("Outward List", style: TextStyle(color: Colors.blue, fontSize: 14, fontWeight: FontWeight.bold)),
-                                              ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 20, top: 10, bottom: 10),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const SizedBox(
+                                            height: 40,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(left: 26,top: 12,right: 0),
+                                              child: Text("Outward List", style: TextStyle(color: Colors.blue, fontSize: 14, fontWeight: FontWeight.bold)),
                                             ),
-                                            SizedBox(
-                                              height: 35,
-                                              width: 120,
-                                              child: OutlinedMButton(
-                                                text: "+  New Outward",
-                                                buttonColor: mSaveButton,
-                                                textColor: Colors.white,
-                                                borderColor: mSaveButton,
-                                                onTap: () {
-                                                  Navigator.of(context).push(
-                                                      PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  AddOutward(
-                                                        drawerWidth: widget.drawerWidth,
-                                                        selectedDestination: widget.selectedDestination,
-                                                        plantValue: widget.plantValue,
-                                                      ),)
-                                                  );
-                                                },
-                                              ),
+                                          ),
+                                          SizedBox(
+                                            height: 35,
+                                            width: 120,
+                                            child: OutlinedMButton(
+                                              text: "+  New Outward",
+                                              buttonColor: mSaveButton,
+                                              textColor: Colors.white,
+                                              borderColor: mSaveButton,
+                                              onTap: () {
+                                                Navigator.of(context).push(
+                                                    PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  AddOutward(
+                                                      drawerWidth: widget.drawerWidth,
+                                                      selectedDestination: widget.selectedDestination,
+                                                      plantValue: widget.plantValue,
+                                                    ),)
+                                                );
+                                              },
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 20, top: 0, bottom: 10),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 20, top: 0, bottom: 10),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          SizedBox(
+                                            height: 30,
+                                            width: 150,
+                                            child: TextFormField(
+                                              style: const TextStyle(fontSize: 11),
+                                              controller: searchGateOutNo,
+                                              decoration: searchGateOutDecoration(hintText: "Search Gate Outward No"),
+                                              onChanged: (value) {
+                                                if(value.isEmpty || value == ""){
+                                                  startVal = 0;
+                                                  filteredList = [];
+                                                  setState(() {
+                                                    if(outwardList.length > outwardList.length){
+                                                      // for(int i=0; i < startVal + 1000; i++){
+                                                      //   filteredList.add(outwardList[i]);
+                                                      // }
+                                                    } else{
+                                                      for(int i=0; i < outwardList.length; i++){
+                                                        filteredList.add(outwardList[i]);
+                                                      }
+                                                    }
+                                                  });
+                                                } else{
+                                                  startVal = 0;
+                                                  filteredList = [];
+                                                  searchEntryDate.clear();
+                                                  searchInvoiceNo.clear();
+                                                  searchCancel.clear();
+                                                  searchSupplierName.clear();
+                                                  fetchGateOutNo(searchGateOutNo.text);
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 20,),
+                                          SizedBox(
+                                            height: 30,
+                                            width: 150,
+                                            child: TextFormField(
+                                              style: const TextStyle(fontSize: 11),
+                                              controller: searchSupplierName,
+                                              decoration: searchSupplierNameDecoration(hintText: "Search Customer Name"),
+                                              onChanged: (value) {
+                                                if(value.isEmpty || value == ""){
+                                                  startVal = 0;
+                                                  filteredList = [];
+                                                  setState(() {
+                                                    if(outwardList.length > outwardList.length){
+                                                      // for(int i=0; i < startVal + 1000; i++){
+                                                      //   filteredList.add(outwardList[i]);
+                                                      // }
+                                                    } else{
+                                                      for(int i=0; i < outwardList.length; i++){
+                                                        filteredList.add(outwardList[i]);
+                                                      }
+                                                    }
+                                                  });
+                                                } else{
+                                                  startVal = 0;
+                                                  filteredList = [];
+                                                  searchGateOutNo.clear();
+                                                  searchInvoiceNo.clear();
+                                                  searchEntryDate.clear();
+                                                  searchCancel.clear();
+                                                  fetchSupplierName(searchSupplierName.text);
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 20,),
+                                          SizedBox(
+                                            height: 30,
+                                            width: 150,
+                                            child: TextFormField(
+                                              style: const TextStyle(fontSize: 11),
+                                              controller: searchInvoiceNo,
+                                              decoration: searchInvoiceNoDecoration(hintText: "Search Invoice No"),
+                                              onChanged: (value) {
+                                                if(value.isEmpty || value == ""){
+                                                  startVal = 0;
+                                                  filteredList = [];
+                                                  setState(() {
+                                                    if(outwardList.length > outwardList.length){
+                                                      // for(int i=0; i < startVal + 1000; i++){
+                                                      //   filteredList.add(outwardList[i]);
+                                                      // }
+                                                    } else{
+                                                      for(int i=0; i < outwardList.length; i++){
+                                                        filteredList.add(outwardList[i]);
+                                                      }
+                                                    }
+                                                  });
+                                                } else{
+                                                  startVal = 0;
+                                                  filteredList = [];
+                                                  searchCancel.clear();
+                                                  searchEntryDate.clear();
+                                                  searchGateOutNo.clear();
+                                                  searchSupplierName.clear();
+                                                  fetchInvoiceNo(searchInvoiceNo.text);
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 20,),
+                                          SizedBox(
+                                            height: 30,
+                                            width: 150,
+                                            child: TextFormField(
+                                              style: const TextStyle(fontSize: 11),
+                                              controller: searchEntryDate,
+                                              decoration: entryDateFieldDecoration(controller: searchEntryDate, hintText: "Select Entry Date"),
+                                              onTap: () {
+                                                setState(() {
+                                                  if(searchEntryDate.text.isEmpty || searchEntryDate.text == ""){
+                                                    startVal = 0;
+                                                    filteredList = outwardList;
+                                                  }
+                                                  selectEntryDate(context: context);
+                                                  searchCancel.clear();
+                                                  searchInvoiceNo.clear();
+                                                  searchGateOutNo.clear();
+                                                  searchSupplierName.clear();
+                                                  // searchVehicleNo.clear();
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 20,),
+                                          SizedBox(
+                                            height: 30,
+                                            width: 150,
+                                            child: TextFormField(
+                                              style: const TextStyle(fontSize: 11),
+                                              controller: searchCancel,
+                                              decoration: searchCancelDecoration(hintText: "Search by Cancel"),
+                                              onChanged: (value) {
+                                                if(value.isEmpty || value == ""){
+                                                  startVal = 0;
+                                                  filteredList = [];
+                                                  setState(() {
+                                                    if(outwardList.length > outwardList.length){
+                                                      // for(int i=0; i < startVal + 15; i++){
+                                                      //   filteredList.add(outwardList[i]);
+                                                      // }
+                                                    } else{
+                                                      for(int i=0; i < outwardList.length; i++){
+                                                        filteredList.add(outwardList[i]);
+                                                      }
+                                                    }
+                                                  });
+                                                } else{
+                                                  startVal = 0;
+                                                  filteredList = [];
+                                                  searchGateOutNo.clear();
+                                                  searchInvoiceNo.clear();
+                                                  searchEntryDate.clear();
+                                                  searchSupplierName.clear();
+                                                  fetchCancel(searchCancel.text);
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Divider(height: 0.5,color: Colors.grey[500],thickness: 0.5,),
+                                    Container(
+                                      color: Colors.grey[100],
+                                      height: 32,
+                                      child: const Padding(
+                                        padding: EdgeInsets.only(left: 18.0, top: 5),
                                         child: Row(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            SizedBox(
-                                              height: 30,
-                                              width: 150,
-                                              child: TextFormField(
-                                                style: const TextStyle(fontSize: 11),
-                                                controller: searchGateOutNo,
-                                                decoration: searchGateOutDecoration(hintText: "Search Gate Outward No"),
-                                                onChanged: (value) {
-                                                  if(value.isEmpty || value == ""){
-                                                    startVal = 0;
-                                                    filteredList = [];
-                                                    setState(() {
-                                                      if(outwardList.length > 1000){
-                                                        for(int i=0; i < startVal + 1000; i++){
-                                                          filteredList.add(outwardList[i]);
-                                                        }
-                                                      } else{
-                                                        for(int i=0; i < outwardList.length; i++){
-                                                          filteredList.add(outwardList[i]);
-                                                        }
-                                                      }
-                                                    });
-                                                  } else{
-                                                    startVal = 0;
-                                                    filteredList = [];
-                                                    searchEntryDate.clear();
-                                                    searchInvoiceNo.clear();
-                                                    searchCancel.clear();
-                                                    searchSupplierName.clear();
-                                                    fetchGateOutNo(searchGateOutNo.text);
-                                                  }
-                                                },
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsets.only(top: 4.0),
+                                                child: SizedBox(
+                                                  height: 25,
+                                                  // width: 150,
+                                                  child: Center(child: Text("Gate Outward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
+                                                ),
                                               ),
                                             ),
-                                            const SizedBox(width: 20,),
-                                            SizedBox(
-                                              height: 30,
-                                              width: 150,
-                                              child: TextFormField(
-                                                style: const TextStyle(fontSize: 11),
-                                                controller: searchSupplierName,
-                                                decoration: searchSupplierNameDecoration(hintText: "Search Supplier Name"),
-                                                onChanged: (value) {
-                                                  if(value.isEmpty || value == ""){
-                                                    startVal = 0;
-                                                    filteredList = [];
-                                                    setState(() {
-                                                      if(outwardList.length > 1000){
-                                                        for(int i=0; i < startVal + 1000; i++){
-                                                          filteredList.add(outwardList[i]);
-                                                        }
-                                                      } else{
-                                                        for(int i=0; i < outwardList.length; i++){
-                                                          filteredList.add(outwardList[i]);
-                                                        }
-                                                      }
-                                                    });
-                                                  } else{
-                                                    startVal = 0;
-                                                    filteredList = [];
-                                                    searchGateOutNo.clear();
-                                                    searchInvoiceNo.clear();
-                                                    searchEntryDate.clear();
-                                                    searchCancel.clear();
-                                                    fetchSupplierName(searchSupplierName.text);
-                                                  }
-                                                },
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsets.only(top: 4.0),
+                                                child: SizedBox(
+                                                  height: 25,
+                                                  // width: 150,
+                                                  child: Center(child: Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
+                                                ),
                                               ),
                                             ),
-                                            const SizedBox(width: 20,),
-                                            SizedBox(
-                                              height: 30,
-                                              width: 150,
-                                              child: TextFormField(
-                                                style: const TextStyle(fontSize: 11),
-                                                controller: searchInvoiceNo,
-                                                decoration: searchInvoiceNoDecoration(hintText: "Search Invoice No"),
-                                                onChanged: (value) {
-                                                  if(value.isEmpty || value == ""){
-                                                    startVal = 0;
-                                                    filteredList = [];
-                                                    setState(() {
-                                                      if(outwardList.length > 1000){
-                                                        for(int i=0; i < startVal + 1000; i++){
-                                                          filteredList.add(outwardList[i]);
-                                                        }
-                                                      } else{
-                                                        for(int i=0; i < outwardList.length; i++){
-                                                          filteredList.add(outwardList[i]);
-                                                        }
-                                                      }
-                                                    });
-                                                  } else{
-                                                    startVal = 0;
-                                                    filteredList = [];
-                                                    searchCancel.clear();
-                                                    searchEntryDate.clear();
-                                                    searchGateOutNo.clear();
-                                                    searchSupplierName.clear();
-                                                    fetchInvoiceNo(searchInvoiceNo.text);
-                                                  }
-                                                },
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsets.only(top: 4.0),
+                                                child: SizedBox(
+                                                  height: 25,
+                                                  // width: 150,
+                                                  child: Center(child: Text("Invoice Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
+                                                ),
                                               ),
                                             ),
-                                            const SizedBox(width: 20,),
-                                            SizedBox(
-                                              height: 30,
-                                              width: 150,
-                                              child: TextFormField(
-                                                style: const TextStyle(fontSize: 11),
-                                                controller: searchEntryDate,
-                                                decoration: entryDateFieldDecoration(controller: searchEntryDate, hintText: "Select Entry Date"),
-                                                onTap: () {
-                                                  setState(() {
-                                                    if(searchEntryDate.text.isEmpty || searchEntryDate.text == ""){
-                                                      startVal = 0;
-                                                      filteredList = outwardList;
-                                                    }
-                                                    selectEntryDate(context: context);
-                                                    searchCancel.clear();
-                                                    searchInvoiceNo.clear();
-                                                    searchGateOutNo.clear();
-                                                    searchSupplierName.clear();
-                                                    // searchVehicleNo.clear();
-                                                  });
-                                                },
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsets.only(top: 4.0),
+                                                child: SizedBox(
+                                                  height: 25,
+                                                  // width: 150,
+                                                  child: Center(child: Text("Entry Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
+                                                ),
                                               ),
                                             ),
-                                            const SizedBox(width: 20,),
-                                            SizedBox(
-                                              height: 30,
-                                              width: 150,
-                                              child: TextFormField(
-                                                style: const TextStyle(fontSize: 11),
-                                                controller: searchCancel,
-                                                decoration: searchCancelDecoration(hintText: "Search by Cancel"),
-                                                onChanged: (value) {
-                                                  if(value.isEmpty || value == ""){
-                                                    startVal = 0;
-                                                    filteredList = [];
-                                                    setState(() {
-                                                      if(outwardList.length > 15){
-                                                        for(int i=0; i < startVal + 15; i++){
-                                                          filteredList.add(outwardList[i]);
-                                                        }
-                                                      } else{
-                                                        for(int i=0; i < outwardList.length; i++){
-                                                          filteredList.add(outwardList[i]);
-                                                        }
-                                                      }
-                                                    });
-                                                  } else{
-                                                    startVal = 0;
-                                                    filteredList = [];
-                                                    searchGateOutNo.clear();
-                                                    searchInvoiceNo.clear();
-                                                    searchEntryDate.clear();
-                                                    searchSupplierName.clear();
-                                                    fetchCancel(searchCancel.text);
-                                                  }
-                                                },
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsets.only(top: 4.0),
+                                                child: SizedBox(
+                                                  height: 25,
+                                                  // width: 150,
+                                                  child: Center(child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
+                                                ),
                                               ),
                                             ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsets.only(top: 4.0),
+                                                child: SizedBox(
+                                                  height: 25,
+                                                  // width: 150,
+                                                  child: Center(child: Text("Download PDF",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsets.only(top: 4.0),
+                                                child: SizedBox(
+                                                  height: 25,
+                                                  // width: 150,
+                                                  child: Center(child: Text("View",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
+                                                ),
+                                              ),
+                                            ),
+                                            // Center(child: Padding(
+                                            //   padding: EdgeInsets.only(right: 8),
+                                            //   child: Icon(size: 18,
+                                            //     Icons.more_vert,
+                                            //     color: Colors.transparent,
+                                            //   ),
+                                            // ),)
                                           ],
                                         ),
                                       ),
-                                      Divider(height: 0.5,color: Colors.grey[500],thickness: 0.5,),
-                                      Container(
-                                        color: Colors.grey[100],
-                                        height: 32,
-                                        child: const Padding(
-                                          padding: EdgeInsets.only(left: 18.0, top: 5),
-                                          child: Row(
+                                    ),
+                                    Divider(height: 0.5,color: Colors.grey[500],thickness: 0.5,),
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: filteredList.length,
+                                      itemBuilder: (context, i) {
+                                        if(i < filteredList.length){
+                                          return Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(top: 4.0),
-                                                  child: SizedBox(
-                                                    height: 25,
-                                                    // width: 150,
-                                                    child: Center(child: Text("Gate Outward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(top: 4.0),
-                                                  child: SizedBox(
-                                                    height: 25,
-                                                    // width: 150,
-                                                    child: Center(child: Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(top: 4.0),
-                                                  child: SizedBox(
-                                                    height: 25,
-                                                    // width: 150,
-                                                    child: Center(child: Text("Invoice Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(top: 4.0),
-                                                  child: SizedBox(
-                                                    height: 25,
-                                                    // width: 150,
-                                                    child: Center(child: Text("Entry Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(top: 4.0),
-                                                  child: SizedBox(
-                                                    height: 25,
-                                                    // width: 150,
-                                                    child: Center(child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(top: 4.0),
-                                                  child: SizedBox(
-                                                    height: 25,
-                                                    // width: 150,
-                                                    child: Center(child: Text("Download PDF",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(top: 4.0),
-                                                  child: SizedBox(
-                                                    height: 25,
-                                                    // width: 150,
-                                                    child: Center(child: Text("View",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))),
-                                                  ),
-                                                ),
-                                              ),
-                                              // Center(child: Padding(
-                                              //   padding: EdgeInsets.only(right: 8),
-                                              //   child: Icon(size: 18,
-                                              //     Icons.more_vert,
-                                              //     color: Colors.transparent,
-                                              //   ),
-                                              // ),)
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      Divider(height: 0.5,color: Colors.grey[500],thickness: 0.5,),
-                                      ListView.builder(
-                                        shrinkWrap: true,
-                                        itemCount: filteredList.length,
-                                        itemBuilder: (context, i) {
-                                          if(i < filteredList.length){
-                                            return Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                MaterialButton(
-                                                  hoverColor: Colors.blue[50],
-                                                  onPressed: () {
+                                              MaterialButton(
+                                                hoverColor: Colors.blue[50],
+                                                onPressed: () {
 
-                                                  },
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(left: 18.0,top: 4,bottom: 3),
-                                                    child: Row(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Center(child: Text(filteredList[i]['GateOutwardNo']??"",style: const TextStyle(fontSize: 11))),
-                                                            ),
+                                                },
+                                                child: Padding(
+                                                  padding: const EdgeInsets.only(left: 18.0,top: 4,bottom: 3),
+                                                  child: Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Center(child: Text(filteredList[i]['GateOutwardNo']??"",style: const TextStyle(fontSize: 11))),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Center(child: Text(filteredList[i]['SupplierName']??"",style: const TextStyle(fontSize: 11))),
-                                                            ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Center(child: Text(filteredList[i]['SupplierName']??"",style: const TextStyle(fontSize: 11))),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Center(child: Text(filteredList[i]['InvoiceNo']??"",style: const TextStyle(fontSize: 11))),
-                                                            ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Center(child: Text(filteredList[i]['InvoiceNo']??"",style: const TextStyle(fontSize: 11))),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Center(child: Text(filteredList[i]['EntryDate'] != null ? _formatDate(outwardList[i]['EntryDate']):"",style: const TextStyle(fontSize: 11))),
-                                                            ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Center(child: Text(filteredList[i]['EntryDate'] != null ? _formatDate(outwardList[i]['EntryDate']):"",style: const TextStyle(fontSize: 11))),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Center(child: Text(filteredList[i]['Cancelled']??"",style: const TextStyle(fontSize: 11))),
-                                                            ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Center(child: Text(filteredList[i]['Cancelled']??"",style: const TextStyle(fontSize: 11))),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Center(
-                                                                child: InkWell(
-                                                                  onTap: () {
-                                                                    // downloadJmiPdf(filteredList[i]);
-                                                                  },
-                                                                  child: const Icon(Icons.download,size: 16,color: Colors.blue),
-                                                                ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Center(
+                                                              child: InkWell(
+                                                                onTap: () {
+                                                                  // downloadJmiPdf(filteredList[i]);
+                                                                },
+                                                                child: const Icon(Icons.download,size: 16,color: Colors.blue),
                                                               ),
                                                             ),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Center(
-                                                                child: InkWell(
-                                                                  onTap: () {
-                                                                    Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditOutward(
-                                                                      drawerWidth: drawerWidth,
-                                                                      selectedDestination: widget.selectedDestination,
-                                                                      outwardList: filteredList[i],
-                                                                      plantValue: widget.plantValue,
-                                                                    ),));
-                                                                  },
-                                                                  child: const Icon(Icons.arrow_circle_right,size: 16,color: Colors.blue),
-                                                                ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Center(
+                                                              child: InkWell(
+                                                                onTap: () {
+                                                                  Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditOutward(
+                                                                    drawerWidth: drawerWidth,
+                                                                    selectedDestination: widget.selectedDestination,
+                                                                    outwardList: filteredList[i],
+                                                                    plantValue: widget.plantValue,
+                                                                  ),));
+                                                                },
+                                                                child: const Icon(Icons.arrow_circle_right,size: 16,color: Colors.blue),
                                                               ),
                                                             ),
                                                           ),
                                                         ),
-                                                        // const Center(child: Padding(
-                                                        //   padding: EdgeInsets.only(right: 8),
-                                                        //   child: Icon(size: 18,
-                                                        //     Icons.arrow_circle_right,
-                                                        //     color: Colors.blue,
-                                                        //   ),
-                                                        // ),)
-                                                      ],
-                                                    ),
+                                                      ),
+                                                      // const Center(child: Padding(
+                                                      //   padding: EdgeInsets.only(right: 8),
+                                                      //   child: Icon(size: 18,
+                                                      //     Icons.arrow_circle_right,
+                                                      //     color: Colors.blue,
+                                                      //   ),
+                                                      // ),)
+                                                    ],
                                                   ),
-                                                )
-                                              ],
-                                            );
-                                          }
-                                        },
-                                      )
-                                    ],
-                                  ),
+                                                ),
+                                              )
+                                            ],
+                                          );
+                                        }
+                                      },
+                                    )
+                                  ],
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

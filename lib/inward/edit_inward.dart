@@ -750,7 +750,12 @@ class _EditInwardState extends State<EditInward> {
                                                 ],
                                               ),
                                               Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
+                                                  const Padding(
+                                                    padding: EdgeInsets.all(8.0),
+                                                    child: SizedBox(height: 30,child: Text("Other than PO Items",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.blue),)),
+                                                  ),
                                                   // Padding(
                                                   //   padding: const EdgeInsets.all(8),
                                                   //   child: Row(

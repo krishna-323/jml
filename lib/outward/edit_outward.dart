@@ -432,6 +432,54 @@ class _EditOutwardState extends State<EditOutward> {
                                                   children: [
                                                     const SizedBox(
                                                         width: 200,
+                                                        child: Text("Customer / Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                    ),
+                                                    SizedBox(
+                                                      height: 30,
+                                                      width: 200,
+                                                      child: TextFormField(
+                                                        style: const TextStyle(fontSize: 11),
+                                                        readOnly: true,
+                                                        controller: supplierNameController,
+                                                        decoration: customerFieldDecoration(hintText: '',controller: supplierNameController),
+                                                        onChanged: (value){
+
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.all(8),
+                                                child: Row(
+                                                  children: [
+                                                    const SizedBox(
+                                                        width: 200,
+                                                        child: Text("Customer / Supplier Code",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
+                                                    ),
+                                                    SizedBox(
+                                                      height: 30,
+                                                      width: 200,
+                                                      child:  TextFormField(
+                                                        style: const TextStyle(fontSize: 11),
+                                                        readOnly: true,
+                                                        controller: supplierCodeController,
+                                                        decoration: customerFieldDecoration(hintText: '',controller: supplierCodeController),
+                                                        onChanged: (value){
+
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.all(8),
+                                                child: Row(
+                                                  children: [
+                                                    const SizedBox(
+                                                        width: 200,
                                                         child: Text("Invoice DC No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
                                                     ),
                                                     SizedBox(
@@ -472,54 +520,6 @@ class _EditOutwardState extends State<EditOutward> {
                                                         // onTap: () {
                                                         //   selectInvoiceDate(context);
                                                         // },
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: const EdgeInsets.all(8),
-                                                child: Row(
-                                                  children: [
-                                                    const SizedBox(
-                                                        width: 200,
-                                                        child: Text("Customer / Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
-                                                    ),
-                                                    SizedBox(
-                                                      height: 30,
-                                                      width: 200,
-                                                      child: TextFormField(
-                                                        style: const TextStyle(fontSize: 11),
-                                                        readOnly: true,
-                                                        controller: supplierNameController,
-                                                        decoration: customerFieldDecoration(hintText: '',controller: supplierNameController),
-                                                        onChanged: (value){
-
-                                                        },
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: const EdgeInsets.all(8),
-                                                child: Row(
-                                                  children: [
-                                                    const SizedBox(
-                                                        width: 200,
-                                                        child: Text("Customer / Supplier Code",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12))
-                                                    ),
-                                                    SizedBox(
-                                                      height: 30,
-                                                      width: 200,
-                                                      child:  TextFormField(
-                                                        style: const TextStyle(fontSize: 11),
-                                                        readOnly: true,
-                                                        controller: supplierCodeController,
-                                                        decoration: customerFieldDecoration(hintText: '',controller: supplierCodeController),
-                                                        onChanged: (value){
-
-                                                        },
                                                       ),
                                                     ),
                                                   ],
