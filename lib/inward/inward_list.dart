@@ -43,7 +43,7 @@ class _InwardListState extends State<InwardList> {
   final searchCancel = TextEditingController();
 
 
-  bool loading = false;
+  bool loading = true;
   List inwardList = [];
   List filteredList = [];
   int startVal=0;
@@ -52,8 +52,6 @@ class _InwardListState extends State<InwardList> {
   Future getInwardList()async{
     // String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GATEENTRY_CDS/YY1_GATEENTRY";
     String url = "${StaticData.apiURL}/YY1_GATEENTRY_CDS/YY1_GATEENTRY?filter=Plant eq '${widget.plantValue}'&orderby=GateInwardNo desc";
-    print('--------- inward list url ------');
-    print(url);
 
     try{
       final response = await http.get(
@@ -95,6 +93,19 @@ class _InwardListState extends State<InwardList> {
             loading = false;
           });
         }
+        if(results.isEmpty){
+          setState(() {
+            loading = false;
+          });
+          if(mounted){
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No Data found!')),);
+          }
+        }
+      }
+      else{
+        setState(() {
+          loading = false;
+        });
       }
     }catch(e){}
   }
@@ -217,460 +228,458 @@ class _InwardListState extends State<InwardList> {
                     ),
                   )
               ),
-              body: CustomLoader(
-                  inAsyncCall: loading,
+              body: loading ? const Center(child: CircularProgressIndicator(),) :
+              AdaptiveScrollbar(
+                underColor: Colors.blueGrey.withOpacity(0.3),
+                sliderDefaultColor: Colors.grey.withOpacity(0.7),
+                sliderActiveColor: Colors.grey,
+                controller: _verticalScrollController,
                 child: AdaptiveScrollbar(
+                  position: ScrollbarPosition.bottom,
                   underColor: Colors.blueGrey.withOpacity(0.3),
                   sliderDefaultColor: Colors.grey.withOpacity(0.7),
                   sliderActiveColor: Colors.grey,
-                  controller: _verticalScrollController,
-                  child: AdaptiveScrollbar(
-                    position: ScrollbarPosition.bottom,
-                    underColor: Colors.blueGrey.withOpacity(0.3),
-                    sliderDefaultColor: Colors.grey.withOpacity(0.7),
-                    sliderActiveColor: Colors.grey,
-                    controller: _horizontalScrollController,
-                    child: SingleChildScrollView(
-                      controller: _verticalScrollController,
-                      scrollDirection: Axis.vertical,
-                      child: Center(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SingleChildScrollView(
-                              controller: _horizontalScrollController,
-                              scrollDirection: Axis.horizontal,
-                              child: SizedBox(
-                                // width: MediaQuery.of(context).size.width/1.2,
-                                width: 1200,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(bottom: 10),
-                                  child: Card(
-                                    color: Colors.white,
-                                    surfaceTintColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(4),
-                                      side: BorderSide(
-                                          color: mTextFieldBorder.withOpacity(0.8),
-                                          width: 1
-                                      ),
+                  controller: _horizontalScrollController,
+                  child: SingleChildScrollView(
+                    controller: _verticalScrollController,
+                    scrollDirection: Axis.vertical,
+                    child: Center(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SingleChildScrollView(
+                            controller: _horizontalScrollController,
+                            scrollDirection: Axis.horizontal,
+                            child: SizedBox(
+                              // width: MediaQuery.of(context).size.width/1.2,
+                              width: 1200,
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: Card(
+                                  color: Colors.white,
+                                  surfaceTintColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                    side: BorderSide(
+                                        color: mTextFieldBorder.withOpacity(0.8),
+                                        width: 1
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.only(right: 20, top: 10, bottom: 10),
-                                          child: Row(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              const SizedBox(
-                                                height: 40,
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(left: 26,top: 12,right: 0),
-                                                  child: Text("Inward List", style: TextStyle(color: Colors.blue, fontSize: 14, fontWeight: FontWeight.bold)),
-                                                ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 20, top: 10, bottom: 10),
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            const SizedBox(
+                                              height: 40,
+                                              child: Padding(
+                                                padding: EdgeInsets.only(left: 26,top: 12,right: 0),
+                                                child: Text("Inward List", style: TextStyle(color: Colors.blue, fontSize: 14, fontWeight: FontWeight.bold)),
                                               ),
-                                              SizedBox(
-                                                height: 35,
-                                                width: 120,
-                                                child: OutlinedMButton(
-                                                  text: "+  New Inward",
-                                                  buttonColor: mSaveButton,
-                                                  textColor: Colors.white,
-                                                  borderColor: mSaveButton,
-                                                  onTap: () {
-                                                    Navigator.of(context).push(
-                                                        PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  AddInward(
-                                                          drawerWidth: widget.drawerWidth,
-                                                          selectedDestination: widget.selectedDestination,
-                                                          plantValue: widget.plantValue,
-                                                        ),)
-                                                    );
-                                                  },
-                                                ),
+                                            ),
+                                            SizedBox(
+                                              height: 35,
+                                              width: 120,
+                                              child: OutlinedMButton(
+                                                text: "+  New Inward",
+                                                buttonColor: mSaveButton,
+                                                textColor: Colors.white,
+                                                borderColor: mSaveButton,
+                                                onTap: () {
+                                                  Navigator.of(context).push(
+                                                      PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  AddInward(
+                                                        drawerWidth: widget.drawerWidth,
+                                                        selectedDestination: widget.selectedDestination,
+                                                        plantValue: widget.plantValue,
+                                                      ),)
+                                                  );
+                                                },
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 20, top: 0, bottom: 10),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 20, top: 0, bottom: 10),
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            SizedBox(
+                                              height: 30,
+                                              width: 150,
+                                              child: TextFormField(
+                                                style: const TextStyle(fontSize: 11),
+                                                controller: searchGateInNo,
+                                                decoration: searchGateInNoDecoration(hintText: "Search Gate Inward No"),
+                                                onChanged: (value) {
+                                                  if(value.isEmpty || value == ""){
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    setState(() {
+                                                      if(inwardList.length > inwardList.length){
+                                                        // for(int i=0; i < startVal + 1000; i++){
+                                                        //   filteredList.add(inwardList[i]);
+                                                        // }
+                                                      } else{
+                                                        for(int i=0; i < inwardList.length; i++){
+                                                          filteredList.add(inwardList[i]);
+                                                        }
+                                                      }
+                                                    });
+                                                  } else{
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    searchEntryDate.clear();
+                                                    searchPONo.clear();
+                                                    searchCancel.clear();
+                                                    searchSupplierName.clear();
+                                                    fetchGateInNo(searchGateInNo.text);
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                            const SizedBox(width: 20,),
+                                            SizedBox(
+                                              height: 30,
+                                              width: 150,
+                                              child: TextFormField(
+                                                style: const TextStyle(fontSize: 11),
+                                                controller: searchSupplierName,
+                                                decoration: searchSupplierNameDecoration(hintText: "Search Supplier Name"),
+                                                onChanged: (value) {
+                                                  if(value.isEmpty || value == ""){
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    setState(() {
+                                                      if(inwardList.length > inwardList.length){
+                                                        // for(int i=0; i < startVal + 1000; i++){
+                                                        //   filteredList.add(inwardList[i]);
+                                                        // }
+                                                      } else{
+                                                        for(int i=0; i < inwardList.length; i++){
+                                                          filteredList.add(inwardList[i]);
+                                                        }
+                                                      }
+                                                    });
+                                                  } else{
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    searchEntryDate.clear();
+                                                    searchPONo.clear();
+                                                    searchCancel.clear();
+                                                    searchGateInNo.clear();
+                                                    fetchSupplierName(searchSupplierName.text);
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                            const SizedBox(width: 20,),
+                                            SizedBox(
+                                              height: 30,
+                                              width: 150,
+                                              child: TextFormField(
+                                                style: const TextStyle(fontSize: 11),
+                                                controller: searchPONo,
+                                                decoration: searchPoNoDecoration(hintText: "Search PO No"),
+                                                onChanged: (value) {
+                                                  if(value.isEmpty || value == ""){
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    setState(() {
+                                                      if(inwardList.length > inwardList.length){
+                                                        // for(int i=0; i < startVal + 1000; i++){
+                                                        //   filteredList.add(inwardList[i]);
+                                                        // }
+                                                      } else{
+                                                        for(int i=0; i < inwardList.length; i++){
+                                                          filteredList.add(inwardList[i]);
+                                                        }
+                                                      }
+                                                    });
+                                                  } else{
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    searchCancel.clear();
+                                                    searchEntryDate.clear();
+                                                    searchGateInNo.clear();
+                                                    searchSupplierName.clear();
+                                                    fetchPoNo(searchPONo.text);
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                            const SizedBox(width: 20,),
+                                            SizedBox(
+                                              height: 30,
+                                              width: 150,
+                                              child: TextFormField(
+                                                style: const TextStyle(fontSize: 11),
+                                                controller: searchEntryDate,
+                                                decoration: entryDateFieldDecoration(controller: searchEntryDate, hintText: "Select Entry Date"),
+                                                onTap: () {
+                                                  setState(() {
+                                                    if(searchEntryDate.text.isEmpty || searchEntryDate.text == ""){
+                                                      startVal = 0;
+                                                      filteredList = inwardList;
+                                                    }
+                                                    selectEntryDate(context);
+                                                    searchCancel.clear();
+                                                    searchPONo.clear();
+                                                    searchGateInNo.clear();
+                                                    searchSupplierName.clear();
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                            const SizedBox(width: 20,),
+                                            SizedBox(
+                                              height: 30,
+                                              width: 150,
+                                              child: TextFormField(
+                                                style: const TextStyle(fontSize: 11),
+                                                controller: searchCancel,
+                                                decoration: searchCancelDecoration(hintText: "Search by Cancel"),
+                                                onChanged: (value) {
+                                                  if(value.isEmpty || value == ""){
+                                                    // startVal = 0;
+                                                    filteredList = [];
+                                                    setState(() {
+                                                      if(inwardList.length > inwardList.length){
+                                                        // for(int i=0; i < startVal + 1000; i++){
+                                                        //   filteredList.add(inwardList[i]);
+                                                        // }
+                                                      } else{
+                                                        for(int i=0; i < inwardList.length; i++){
+                                                          filteredList.add(inwardList[i]);
+                                                        }
+                                                      }
+                                                    });
+                                                  } else{
+                                                    startVal = 0;
+                                                    filteredList = [];
+                                                    searchGateInNo.clear();
+                                                    searchPONo.clear();
+                                                    searchEntryDate.clear();
+                                                    searchSupplierName.clear();
+                                                    fetchCancel(searchCancel.text);
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Divider(height: 0.5,color: Colors.grey[500],thickness: 0.5,),
+                                      Container(
+                                        color: Colors.grey[100],
+                                        height: 32,
+                                        child: const Padding(
+                                          padding: EdgeInsets.only(left: 18.0, top: 5),
                                           child: Row(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              SizedBox(
-                                                height: 30,
-                                                width: 150,
-                                               child: TextFormField(
-                                                 style: const TextStyle(fontSize: 11),
-                                                 controller: searchGateInNo,
-                                                 decoration: searchGateInNoDecoration(hintText: "Search Gate Inward No"),
-                                                 onChanged: (value) {
-                                                   if(value.isEmpty || value == ""){
-                                                     startVal = 0;
-                                                     filteredList = [];
-                                                     setState(() {
-                                                       if(inwardList.length > inwardList.length){
-                                                         // for(int i=0; i < startVal + 1000; i++){
-                                                         //   filteredList.add(inwardList[i]);
-                                                         // }
-                                                       } else{
-                                                         for(int i=0; i < inwardList.length; i++){
-                                                           filteredList.add(inwardList[i]);
-                                                         }
-                                                       }
-                                                     });
-                                                   } else{
-                                                     startVal = 0;
-                                                     filteredList = [];
-                                                     searchEntryDate.clear();
-                                                     searchPONo.clear();
-                                                     searchCancel.clear();
-                                                     searchSupplierName.clear();
-                                                     fetchGateInNo(searchGateInNo.text);
-                                                   }
-                                                 },
-                                               ),
-                                              ),
-                                              const SizedBox(width: 20,),
-                                              SizedBox(
-                                                height: 30,
-                                                width: 150,
-                                                child: TextFormField(
-                                                  style: const TextStyle(fontSize: 11),
-                                                  controller: searchSupplierName,
-                                                  decoration: searchSupplierNameDecoration(hintText: "Search Supplier Name"),
-                                                  onChanged: (value) {
-                                                    if(value.isEmpty || value == ""){
-                                                      startVal = 0;
-                                                      filteredList = [];
-                                                      setState(() {
-                                                        if(inwardList.length > inwardList.length){
-                                                          // for(int i=0; i < startVal + 1000; i++){
-                                                          //   filteredList.add(inwardList[i]);
-                                                          // }
-                                                        } else{
-                                                          for(int i=0; i < inwardList.length; i++){
-                                                            filteredList.add(inwardList[i]);
-                                                          }
-                                                        }
-                                                      });
-                                                    } else{
-                                                      startVal = 0;
-                                                      filteredList = [];
-                                                      searchEntryDate.clear();
-                                                      searchPONo.clear();
-                                                      searchCancel.clear();
-                                                      searchGateInNo.clear();
-                                                      fetchSupplierName(searchSupplierName.text);
-                                                    }
-                                                  },
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(top: 4.0),
+                                                  child: SizedBox(
+                                                    height: 25,
+                                                    // width: 150,
+                                                    child: Text("Gate Inward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                  ),
                                                 ),
                                               ),
-                                              const SizedBox(width: 20,),
-                                              SizedBox(
-                                                height: 30,
-                                                width: 150,
-                                                child: TextFormField(
-                                                  style: const TextStyle(fontSize: 11),
-                                                  controller: searchPONo,
-                                                  decoration: searchPoNoDecoration(hintText: "Search PO No"),
-                                                  onChanged: (value) {
-                                                    if(value.isEmpty || value == ""){
-                                                      startVal = 0;
-                                                      filteredList = [];
-                                                      setState(() {
-                                                        if(inwardList.length > inwardList.length){
-                                                          // for(int i=0; i < startVal + 1000; i++){
-                                                          //   filteredList.add(inwardList[i]);
-                                                          // }
-                                                        } else{
-                                                          for(int i=0; i < inwardList.length; i++){
-                                                            filteredList.add(inwardList[i]);
-                                                          }
-                                                        }
-                                                      });
-                                                    } else{
-                                                      startVal = 0;
-                                                      filteredList = [];
-                                                      searchCancel.clear();
-                                                      searchEntryDate.clear();
-                                                      searchGateInNo.clear();
-                                                      searchSupplierName.clear();
-                                                      fetchPoNo(searchPONo.text);
-                                                    }
-                                                  },
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(top: 4.0),
+                                                  child: SizedBox(
+                                                    height: 25,
+                                                    // width: 150,
+                                                    child: Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                  ),
                                                 ),
                                               ),
-                                              const SizedBox(width: 20,),
-                                              SizedBox(
-                                                height: 30,
-                                                width: 150,
-                                                child: TextFormField(
-                                                  style: const TextStyle(fontSize: 11),
-                                                  controller: searchEntryDate,
-                                                  decoration: entryDateFieldDecoration(controller: searchEntryDate, hintText: "Select Entry Date"),
-                                                  onTap: () {
-                                                    setState(() {
-                                                      if(searchEntryDate.text.isEmpty || searchEntryDate.text == ""){
-                                                        startVal = 0;
-                                                        filteredList = inwardList;
-                                                      }
-                                                      selectEntryDate(context);
-                                                      searchCancel.clear();
-                                                      searchPONo.clear();
-                                                      searchGateInNo.clear();
-                                                      searchSupplierName.clear();
-                                                    });
-                                                  },
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(top: 4.0),
+                                                  child: SizedBox(
+                                                    height: 25,
+                                                    // width: 150,
+                                                    child: Text("PO Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                  ),
                                                 ),
                                               ),
-                                              const SizedBox(width: 20,),
-                                              SizedBox(
-                                                height: 30,
-                                                width: 150,
-                                                child: TextFormField(
-                                                  style: const TextStyle(fontSize: 11),
-                                                  controller: searchCancel,
-                                                  decoration: searchCancelDecoration(hintText: "Search by Cancel"),
-                                                  onChanged: (value) {
-                                                    if(value.isEmpty || value == ""){
-                                                      // startVal = 0;
-                                                      filteredList = [];
-                                                      setState(() {
-                                                        if(inwardList.length > inwardList.length){
-                                                          // for(int i=0; i < startVal + 1000; i++){
-                                                          //   filteredList.add(inwardList[i]);
-                                                          // }
-                                                        } else{
-                                                          for(int i=0; i < inwardList.length; i++){
-                                                            filteredList.add(inwardList[i]);
-                                                          }
-                                                        }
-                                                      });
-                                                    } else{
-                                                      startVal = 0;
-                                                      filteredList = [];
-                                                      searchGateInNo.clear();
-                                                      searchPONo.clear();
-                                                      searchEntryDate.clear();
-                                                      searchSupplierName.clear();
-                                                      fetchCancel(searchCancel.text);
-                                                    }
-                                                  },
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(top: 4.0),
+                                                  child: SizedBox(
+                                                    height: 25,
+                                                    // width: 150,
+                                                    child: Text("Entry Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(top: 4.0),
+                                                  child: SizedBox(
+                                                    height: 25,
+                                                    // width: 100,
+                                                    child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                  ),
+                                                ),
+                                              ),
+                                              Center(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(top: 4.0,right: 25),
+                                                  child: SizedBox(
+                                                    height: 25,
+                                                    width: 100,
+                                                    child: Text("Download PDF",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                  ),
+                                                ),
+                                              ),
+                                              Center(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(top: 4.0,right: 25),
+                                                  child: SizedBox(
+                                                    height: 25,
+                                                    // width: 100,
+                                                    child: Text("View",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                                                  ),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        Divider(height: 0.5,color: Colors.grey[500],thickness: 0.5,),
-                                        Container(
-                                          color: Colors.grey[100],
-                                          height: 32,
-                                          child: const Padding(
-                                            padding: EdgeInsets.only(left: 18.0, top: 5),
-                                            child: Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding: EdgeInsets.only(top: 4.0),
-                                                    child: SizedBox(
-                                                      height: 25,
-                                                      // width: 150,
-                                                      child: Text("Gate Inward No",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding: EdgeInsets.only(top: 4.0),
-                                                    child: SizedBox(
-                                                      height: 25,
-                                                      // width: 150,
-                                                      child: Text("Supplier Name",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding: EdgeInsets.only(top: 4.0),
-                                                    child: SizedBox(
-                                                      height: 25,
-                                                      // width: 150,
-                                                      child: Text("PO Number",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding: EdgeInsets.only(top: 4.0),
-                                                    child: SizedBox(
-                                                      height: 25,
-                                                      // width: 150,
-                                                      child: Text("Entry Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding: EdgeInsets.only(top: 4.0),
-                                                    child: SizedBox(
-                                                      height: 25,
-                                                      // width: 100,
-                                                      child: Text("Cancelled",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Center(
-                                                  child: Padding(
-                                                    padding: EdgeInsets.only(top: 4.0,right: 25),
-                                                    child: SizedBox(
-                                                      height: 25,
-                                                      width: 100,
-                                                      child: Text("Download PDF",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Center(
-                                                  child: Padding(
-                                                    padding: EdgeInsets.only(top: 4.0,right: 25),
-                                                    child: SizedBox(
-                                                      height: 25,
-                                                      // width: 100,
-                                                      child: Text("View",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        Divider(height: 0.5,color: Colors.grey[500],thickness: 0.5,),
-                                        ListView.builder(
-                                          shrinkWrap: true,
-                                          itemCount: filteredList.length,
-                                          itemBuilder: (context, i) {
-                                            return Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                MaterialButton(
-                                                  hoverColor: Colors.blue[50],
-                                                  onPressed: () {
+                                      ),
+                                      Divider(height: 0.5,color: Colors.grey[500],thickness: 0.5,),
+                                      ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: filteredList.length,
+                                        itemBuilder: (context, i) {
+                                          return Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              MaterialButton(
+                                                hoverColor: Colors.blue[50],
+                                                onPressed: () {
 
-                                                  },
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(left: 18.0,top: 4,bottom: 4),
-                                                    child: Row(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Text(filteredList[i]['GateInwardNo']??"",style: const TextStyle(fontSize: 11)),
-                                                            ),
+                                                },
+                                                child: Padding(
+                                                  padding: const EdgeInsets.only(left: 18.0,top: 4,bottom: 4),
+                                                  child: Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Text(filteredList[i]['GateInwardNo']??"",style: const TextStyle(fontSize: 11)),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Text(filteredList[i]['SupplierName']??"",style: const TextStyle(fontSize: 11)),
-                                                            ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Text(filteredList[i]['SupplierName']??"",style: const TextStyle(fontSize: 11)),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Text(filteredList[i]['PurchaseOrderNo']??"",style: const TextStyle(fontSize: 11)),
-                                                            ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Text(filteredList[i]['PurchaseOrderNo']??"",style: const TextStyle(fontSize: 11)),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              // child: Text(filteredList[i]['EntryDate']??"",style: const TextStyle(fontSize: 11)),
-                                                              child: Text(filteredList[i]['EntryDate'] != null ? _formatDate(filteredList[i]['EntryDate']) : "", style: const TextStyle(fontSize: 11)),
-                                                            ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            // child: Text(filteredList[i]['EntryDate']??"",style: const TextStyle(fontSize: 11)),
+                                                            child: Text(filteredList[i]['EntryDate'] != null ? _formatDate(filteredList[i]['EntryDate']) : "", style: const TextStyle(fontSize: 11)),
                                                           ),
                                                         ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              child: Text(filteredList[i]['Cancelled']??"",style: const TextStyle(fontSize: 11)),
-                                                            ),
+                                                      ),
+                                                      Expanded(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            child: Text(filteredList[i]['Cancelled']??"",style: const TextStyle(fontSize: 11)),
                                                           ),
                                                         ),
-                                                        Center(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0,right: 25),
-                                                            child: SizedBox(
-                                                              // height: 25,
-                                                              width: 100,
-                                                              child: InkWell(
-                                                                hoverColor: Colors.transparent,
-                                                                onTap: () {
-                                                                  downloadJmiPdf(filteredList[i]);
-                                                                },
-                                                                child: const Icon(size: 18,
-                                                                  Icons.download,
-                                                                  color: Colors.blue,
-                                                                ),
+                                                      ),
+                                                      Center(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0,right: 25),
+                                                          child: SizedBox(
+                                                            // height: 25,
+                                                            width: 100,
+                                                            child: InkWell(
+                                                              hoverColor: Colors.transparent,
+                                                              onTap: () {
+                                                                downloadJmiPdf(filteredList[i]);
+                                                              },
+                                                              child: const Icon(size: 18,
+                                                                Icons.download,
+                                                                color: Colors.blue,
                                                               ),
                                                             ),
                                                           ),
                                                         ),
-                                                        Center(
-                                                          child: Padding(
-                                                            padding: const EdgeInsets.only(top: 4.0, right: 25),
-                                                            child: SizedBox(
-                                                              // width: 100,
-                                                              child: InkWell(
-                                                                hoverColor: Colors.transparent,
-                                                                onTap: () {
-                                                                  Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditInward(
-                                                                    drawerWidth: drawerWidth,
-                                                                    selectedDestination: widget.selectedDestination,
-                                                                    inwardMap: filteredList[i],
-                                                                    plantValue: widget.plantValue,
-                                                                  ),));
-                                                                },
-                                                                child: const Icon(size: 18,
-                                                                  Icons.arrow_circle_right,
-                                                                  color: Colors.blue,
-                                                                ),
+                                                      ),
+                                                      Center(
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0, right: 25),
+                                                          child: SizedBox(
+                                                            // width: 100,
+                                                            child: InkWell(
+                                                              hoverColor: Colors.transparent,
+                                                              onTap: () {
+                                                                Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) => EditInward(
+                                                                  drawerWidth: drawerWidth,
+                                                                  selectedDestination: widget.selectedDestination,
+                                                                  inwardMap: filteredList[i],
+                                                                  plantValue: widget.plantValue,
+                                                                ),));
+                                                              },
+                                                              child: const Icon(size: 18,
+                                                                Icons.arrow_circle_right,
+                                                                color: Colors.blue,
                                                               ),
                                                             ),
-                                                          ),)
-                                                      ],
-                                                    ),
+                                                          ),
+                                                        ),)
+                                                    ],
                                                   ),
-                                                )
-                                              ],
-                                            );
-                                            if(i < filteredList.length){
+                                                ),
+                                              )
+                                            ],
+                                          );
+                                          if(i < filteredList.length){
 
-                                            }
-                                          },
-                                        )
-                                      ],
-                                    ),
+                                          }
+                                        },
+                                      )
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
