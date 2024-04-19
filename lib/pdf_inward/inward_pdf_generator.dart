@@ -84,6 +84,7 @@ Future<Uint8List> inwardPdfGen(Map filteredList) async {
                   Row(
                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       // Column 1
                       Column(

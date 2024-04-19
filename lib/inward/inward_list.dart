@@ -12,6 +12,7 @@ import 'package:jml/utils/custom_drawer.dart';
 import 'package:jml/utils/custom_loader.dart';
 import 'package:jml/widgets/outlined_mbutton.dart';
 import 'dart:html' as html;
+import '../pdf_inward/inward_pdf2.dart';
 import '../pdf_inward/inward_pdf_generator.dart';
 import '../utils/config.dart';
 import '../utils/jml_colors.dart';
@@ -146,7 +147,7 @@ class _InwardListState extends State<InwardList> {
   ///Down pdf.
   Future downloadJmiPdf(Map filteredList)async{
 
-    final Uint8List pdfBytes = await inwardPdfGen(filteredList);
+    final Uint8List pdfBytes = await inwardPdfGen2(filteredList);
 
     // Create a blob from the PDF bytes
     final blob = html.Blob([pdfBytes]);

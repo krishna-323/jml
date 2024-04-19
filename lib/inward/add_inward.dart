@@ -177,13 +177,17 @@ class _AddInwardState extends State<AddInward> {
     return 'PT${time.hour}H${time.minute}M00S';
   }
   String? userName;
+  String? plant;
   Future<void> getLoginData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       userName = prefs.getString('userName');
+      plant = prefs.getString('plant');
     });
   }
-
+  void initializeData() async {
+    await getLoginData(); // Wait for getLoginData to complete
+  }
   @override
   void initState() {
     // TODO: implement initState
@@ -202,7 +206,7 @@ class _AddInwardState extends State<AddInward> {
     getInitialData();
     canceledController.text = canceledValue1;
     plantController.text = widget.plantValue;
-    getLoginData();
+    initializeData();
   }
 
   Future getInitialData() async{
@@ -339,8 +343,8 @@ class _AddInwardState extends State<AddInward> {
                                 "ReceivedBy1": referenceNoController.text,
                                 "CreatedBy": userName,
                               };
-                              print('--------- add inward --------');
-                              print(savedInward);
+                              // print('--------- add inward --------');
+                              // print(savedInward);
                               postInwardApi(savedInward, context);
                             },
                             child: const Text("Save", style: TextStyle(color: Colors.white)),
@@ -1097,10 +1101,14 @@ class _AddInwardState extends State<AddInward> {
 
 
   Future<List<dynamic>?> getPOData(String supplierCode) async {
-    String url2 = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrderItem&expand=_PurchaseOrder,_PurchaseOrderItem";
+    // String url = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode' and _PurchaseOrderItem/Plant eq '${plantController.text}'&select=PurchaseOrder&expand=_PurchaseOrder,_PurchaseOrderItem";
+    // String url = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrder&expand=_PurchaseOrder,_PurchaseOrderItem";
+    String url = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?select=PurchaseOrder&expand=_PurchaseOrder,_PurchaseOrderItem&filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'TO')) and _PurchaseOrder/Supplier eq '$supplierCode'&top=5000";
+    // String url2 = "${StaticData.apiURL}/PurchaseOrder/PurchaseOrderScheduleLine?filter=((OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'AU') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'EA')  or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'H') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'KG') or (OpenPurchaseOrderQuantity gt 0 and PurchaseOrderQuantityUnit eq 'PC')) and _PurchaseOrder/Supplier eq '$supplierCode'&select=PurchaseOrderItem&expand=_PurchaseOrder,_PurchaseOrderItem";
+
     try {
       final response = await http.get(
-        Uri.parse(url2),
+        Uri.parse(url),
         headers: {'Authorization': StaticData.basicAuth},
       );
       if (response.statusCode == 200) {
@@ -1149,37 +1157,50 @@ class _AddInwardState extends State<AddInward> {
   }
 
 
-  Future getGateInNo() async{
-    String url = "${StaticData.apiURL}/YY1_GATEENTRY_CDS/YY1_GATEENTRY?orderby=GateInwardNo desc";
-    try{
+  Future getGateInNo() async {
+    String url = "${StaticData.apiURL}/YY1_GATEENTRY_CDS/YY1_GATEENTRY?orderby=GateInwardNo desc&filter=Plant eq '${widget.plantValue}'";
+
+    try {
       final response = await http.get(
         Uri.parse(url),
-        headers: {
-          'Authorization': StaticData.basicAuth,
-        },
+        headers: {'Authorization': StaticData.basicAuth},
       );
-      if(response.statusCode == 200){
+      if (response.statusCode == 200) {
         Map tempData = json.decode(response.body);
         List results = tempData['d']['results'];
 
-        if(results.isNotEmpty){
+        int nextGateInwardNo = 1;
+        if (results.isNotEmpty) {
           String firstGateInwardNo = results[0]['GateInwardNo'];
-          int nextGateInwardNo = int.parse(firstGateInwardNo) + 1;
-          gateInwardNoController.text = nextGateInwardNo.toString();
-          setState(() {
-            loading = false;
-          });
-        }
-        if(results.isEmpty){
-          setState(() {
-            loading = false;
-          });
-          if(mounted){
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No Data Found")));
+          nextGateInwardNo = int.parse(firstGateInwardNo) + 1;
+        } else {
+          if (widget.plantValue == '1101') {
+            nextGateInwardNo = 1000000001;
+          } else if (widget.plantValue == '1102') {
+            nextGateInwardNo = 2000000001;
+          } else if (widget.plantValue == '1103') {
+            nextGateInwardNo = 3000000001;
+          } else if (widget.plantValue == '1104') {
+            nextGateInwardNo = 4000000001;
+          }else if (widget.plantValue == '1105') {
+            nextGateInwardNo = 5000000001;
+          }else if (widget.plantValue == '1106') {
+            nextGateInwardNo = 6000000001;
+          }else if (widget.plantValue == '1107') {
+            nextGateInwardNo = 7000000001;
           }
         }
+        gateInwardNoController.text = nextGateInwardNo.toString();
+        setState(() {
+          loading = false;
+        });
+      } else {
+        print('Error fetching GateInwardNo: ${response.statusCode}');
+        setState(() {
+          loading = false;
+        });
       }
-    }catch(e){
+    } catch (e) {
       print('Error fetching GateInwardNo: $e');
       setState(() {
         loading = false;
@@ -1527,7 +1548,7 @@ class _AddInwardState extends State<AddInward> {
                   )
               ),
               SizedBox(
-                width: 1100,
+                width: 1200,
                 height: 400,
                 child: ListView.builder(
                   shrinkWrap: true,
@@ -1547,6 +1568,7 @@ class _AddInwardState extends State<AddInward> {
                       var itemPrice = purchaseOrderItem['NetPriceAmount'];
                       var itemGrossAmt = purchaseOrderItem['GrossAmount'];
                       var poLineId = purchaseOrderItem['PurchaseOrderItem'];
+                      var poPlant = purchaseOrderItem['Plant'];
                       widgets.add(
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1555,6 +1577,10 @@ class _AddInwardState extends State<AddInward> {
                             SizedBox(
                                 width: 100,
                                 child: Center(child: Text(poLineId.toString()))
+                            ),
+                            SizedBox(
+                                width: 100,
+                                child: Center(child: Text(widget.plantValue))
                             ),
                             SizedBox(
                               width: 100,
@@ -1600,6 +1626,10 @@ class _AddInwardState extends State<AddInward> {
                               SizedBox(
                                   width: 100,
                                   child: Center(child: Text("Line No",style: TextStyle(fontWeight: FontWeight.bold),))
+                              ),
+                              SizedBox(
+                                  width: 100,
+                                  child: Center(child: Text("Plant",style: TextStyle(fontWeight: FontWeight.bold),))
                               ),
                               SizedBox(
                                   width: 100,
