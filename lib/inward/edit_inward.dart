@@ -543,8 +543,8 @@ class _EditInwardState extends State<EditInward> {
                                                                 ),
                                                                 contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
                                                                 suffixIcon: Icon(
-                                                                  Icons.arrow_drop_down_outlined,
-                                                                  color: Colors.blue,size: 16,
+                                                                  Icons.arrow_drop_down_circle_sharp,
+                                                                  color: Colors.blue,size: 14,
                                                                 ),
                                                                 enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
                                                                 focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
@@ -600,8 +600,8 @@ class _EditInwardState extends State<EditInward> {
                                                                 ),
                                                                 contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
                                                                 suffixIcon: Icon(
-                                                                  Icons.arrow_drop_down_outlined,
-                                                                  color: Colors.blue,size: 16,
+                                                                  Icons.arrow_drop_down_circle_sharp,
+                                                                  color: Colors.blue,size: 14,
                                                                 ),
                                                                 enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
                                                                 focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
@@ -649,8 +649,8 @@ class _EditInwardState extends State<EditInward> {
                                                                 ),
                                                                 contentPadding: EdgeInsets.fromLTRB(12, 00, 0, 0),
                                                                 suffixIcon: Icon(
-                                                                  Icons.arrow_drop_down_outlined,
-                                                                  color: Colors.blue,size: 16,
+                                                                  Icons.arrow_drop_down_circle_sharp,
+                                                                  color: Colors.blue,size: 14,
                                                                 ),
                                                                 enabledBorder:OutlineInputBorder(borderSide: BorderSide(color: mTextFieldBorder)),
                                                                 focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
