@@ -3,6 +3,7 @@ import 'package:jml/home/home_screen.dart';
 import 'package:jml/inward/inward_list.dart';
 import 'package:jml/outward/outward_list.dart';
 
+import '../dc_print/pdf_dc_generator.dart';
 import 'jml_colors.dart';
 
 class CustomDrawer extends StatefulWidget {
@@ -25,7 +26,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
   bool inwardExpanded = false;
   bool outwardHover = false;
   bool outwardExpanded = false;
-
+  //Dc Print.
+  bool dcPrintHover=false;
+  bool dcExpand=false;
   @override
   void initState() {
     // TODO: implement initState
@@ -41,6 +44,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
     } else if (_selectedDestination == 2) {
       outwardHover = true;
       outwardExpanded = false;
+    }
+    else if (_selectedDestination == 3) {
+      dcPrintHover = true;
+      dcExpand = false;
     }
   }
   @override
@@ -223,9 +230,65 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   ),
                 ),
               ),
+              ///DC Print.
+              drawerWidth == 60 ? InkWell(
+                hoverColor: mHoverColor,
+                onTap: (){
+                  setState(() {
+                    drawerWidth = 190;
+                  });
+                },
+                child: SizedBox(
+                  height: 40,
+                  child: Icon(Icons.print,
+                    color: _selectedDestination == 3 ? Colors.blue: Colors.black54,
+                  ),
+                ),
+              ) :
+              MouseRegion(
+                onHover: (event){
+                  setState((){
+                    // outwardHover =true;
+                    // inwardHover=false;
+                  });
+                },
+                onExit: (event){
+                  setState(() {
+                    // outwardHover=false;
+                  });
+                },
+                child: Container(
+                  color: dcPrintHover?mHoverColor:Colors.transparent,
+                  child: ListTileTheme(
+                    contentPadding: const EdgeInsets.only(left: 0),
+                    child: ListTile(
+                      onTap: () {
+                        Navigator.of(context).push(PageRouteBuilder(pageBuilder: (context, animation, secondaryAnimation) =>  DcPdfGenerator(
+                          drawerWidth: widget.drawerWidth,
+                          selectedDestination: 3,
+                          //plantValue: widget.plantValue,
+                        ),));
+                      },
+                      leading: const SizedBox(width: 40,child: Padding(
+                        padding: EdgeInsets.only(left: 20.0),
+                        child: Icon(Icons.print),
+                      ),),
+                      title:    Padding(
+                        padding: const EdgeInsets.only(left: 10.0),
+                        child: Text(
+                          drawerWidth == 60 ? '' : 'DC Print',
+                          style: const TextStyle(fontSize: 17,color: Colors.black),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
+
+        //Bottom Navigation.
         bottomNavigationBar: SizedBox(
           height: 30,
           width: 50,
