@@ -3724,29 +3724,24 @@ Future<Uint8List> generatePdfDelivery303(List<dynamic> responseData1, List<dynam
                      try{
                        print('-------try---');
 
-                       if(responseData2[i]['YY1_Price_MMI']!="" && responseData2[i]['YY1_Price_MMI']!="0.00"){
-                         // print('---First Block--');
+                       if(responseData1[i]["StandardPrice"]!="" && responseData1[i]['StandardPrice']!="0.00"){
+                            print('-----if-----');
+                            print(responseData1[i]["StandardPrice"]);
+                            price = double.parse(responseData1[i]['StandardPrice']);
+                       }
+                       else if(responseData1[i]['MovingAveragePrice']!=""  && responseData1[i]['MovingAveragePrice']!="0.00"){
+                         price = double.parse(responseData1[i]["MovingAveragePrice"]);
+                       }
+                       else if(responseData1[i]["YY1_ManualPrice_PRD"]!="" && responseData1[i]['YY1_ManualPrice_PRD']!="0.00"){
+                         price = double.parse(responseData1[i]["YY1_ManualPrice_PRD"]);
+                       }
+                       else if(responseData2[i]['YY1_Price_MMI']!="" && responseData2[i]['YY1_Price_MMI']!="0.00"){
                          price = double.parse(responseData2[i]['YY1_Price_MMI']);
                        }
                        else{
-                         // print("Seco block");
-
-                         if(responseData1[i]['MovingAveragePrice']!=""  && responseData1[i]['MovingAveragePrice']!="0.00"){
-                           // print('-----Sub 1---');
-                           price = double.parse(responseData1[i]['MovingAveragePrice']);
-                         }
-                         else if(responseData1[i]["StandardPrice"]!="" && responseData1[i]['StandardPrice']!="0.00"){
-                           // print('-----Sub 2---');
-                           // print('-----else if-----');
-                           // print(responseData1[i]["StandardPrice"]);
-                           price = double.parse(responseData1[i]['StandardPrice']);
-                         }
-                         else{
-                           price = double.parse(responseData2[i]['YY1_Price_MMI']);
-                         }
+                         price = double.parse(responseData1[i]['StandardPrice']);
                        }
-                       print('--------price--------');
-                       print(price);
+
                      }
                      catch(e){
                        print('-------Exception---While Calculating---');
@@ -4299,9 +4294,14 @@ Future<Uint8List> generatePdfDelivery303(List<dynamic> responseData1, List<dynam
                         Text(" :",style: fontSize8WidthBold),
                         Builder(
                           builder: ( context) {
+                            print('------Replacing Thousands To Thousand------');
+                            print(converter.convertAmountToWords(totalAmount, ignoreDecimal: false,).replaceAll('Thousands', "Thousand"));
+                            //Replacing Thousands To Thousand.
+                            String totalAmountTemp=converter.convertAmountToWords(totalAmount, ignoreDecimal: false,).replaceAll('Thousands', "Thousand");
+
                             return Text(
                               // ' Rs. ${convertToText(totalAmount)}',
-                              converter.convertAmountToWords(totalAmount, ignoreDecimal: false),
+                              totalAmountTemp,
                               //'',
 
                               style:fontSize8,
