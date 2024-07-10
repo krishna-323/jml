@@ -181,7 +181,10 @@ class _DcPdfGeneratorState extends State<DcPdfGenerator> {
 
   //Goods Movement Type 303.
   Future fetchData303(String dcNumber, List<dynamic> responseGoodsMovementType)async{
-    String header303="Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GOODS_MOVEMENT_303_CDS/YY1_Goods_movement_303?filter=MaterialDocument eq '$dcNumber' and IsAutomaticallyCreated eq  ''";
+    ///Old.
+   // String header303="Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_GOODS_MOVEMENT_303_CDS/YY1_Goods_movement_303?filter=MaterialDocument eq '$dcNumber' and IsAutomaticallyCreated eq  ''";
+    ///New.
+    String header303 ="Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/YY1_303_MOVE_TYPE_CDS/YY1_303_MOVE_TYPE?filter=MaterialDocument eq '$dcNumber' and IsAutomaticallyCreated eq ''";
     String username = 'INTEGRATION';
     String password = 'rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl';
     String basicAuth = 'Basic ${base64Encode(utf8.encode('$username:$password'))}';
@@ -230,7 +233,10 @@ class _DcPdfGeneratorState extends State<DcPdfGenerator> {
   }
 
   Future getGoodsMovementType(String dcNumber)async{
-    String url ="Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/API_MATERIAL_DOCUMENT_SRV/A_MaterialDocumentItem?format=json&filter=MaterialDocument eq '$dcNumber' and IsAutomaticallyCreated eq ''";
+    ///old API.
+   // String url ="Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/API_MATERIAL_DOCUMENT_SRV/A_MaterialDocumentItem?format=json&filter=MaterialDocument eq '$dcNumber' and IsAutomaticallyCreated eq ''";
+    ///String New Api.
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Customising/API_MATERIAL_DOCUMENT_SRV/A_MaterialDocumentItem?format=json&filter=MaterialDocument eq '$dcNumber' and IsAutomaticallyCreated eq ''";
     String username = 'INTEGRATION';
     String password = 'rXnDqEpDv2WlWYahKnEGo)mwREoCafQNorwoDpLl';
     String basicAuth = 'Basic ${base64Encode(utf8.encode('$username:$password'))}';
