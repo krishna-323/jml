@@ -43,6 +43,7 @@ dependencies:
   pdf: ^3.10.8
   shared_preferences: ^2.2.1
   indian_currency_to_word: ^1.0.0
+  collection: ^1.17.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

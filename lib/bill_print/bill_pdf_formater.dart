@@ -1,11 +1,13 @@
 import 'dart:typed_data';
-//import 'package:indian_currency_to_word/indian_currency_to_word.dart';
+import 'package:indian_currency_to_word/indian_currency_to_word.dart';
 import 'package:pdf/pdf.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart';
 
 Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
-  //final converter = AmountToWords();
+  // print('-----------billList-------------');
+  // print(billList);
+  final converter = AmountToWords();
 
   ///Styles.
   // TextStyle blueGrey200 = const TextStyle(color: PdfColors.blueGrey300);
@@ -38,16 +40,16 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
     }
   }
 
-  String formatToTwoDecimal(double number) {
-    // Convert the number to a string with two decimal places
-    String formattedNumber = number.toStringAsFixed(2);
-
-    // If the number is an integer, remove the ".00"
-    if (formattedNumber.endsWith('.00')) {
-      formattedNumber = formattedNumber.substring(0, formattedNumber.length - 3);
-    }
-    return formattedNumber;
-  }
+  // String formatToTwoDecimal(double number) {
+  //   // Convert the number to a string with two decimal places
+  //   String formattedNumber = number.toStringAsFixed(2);
+  //
+  //   // If the number is an integer, remove the ".00"
+  //   if (formattedNumber.endsWith('.00')) {
+  //     formattedNumber = formattedNumber.substring(0, formattedNumber.length - 3);
+  //   }
+  //   return formattedNumber;
+  // }
   double textWidth1 = 45;
   double textWidth2= 80;
   Text collenStyle =  Text(" : ",style: fontSize8WidthBold);
@@ -72,10 +74,10 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
             child: Column(children:[
               SizedBox(height: 30),
               Text(
-                'PIONEER JELLICCE INDIA PRIVATE LIMITED',
+                'JM FRICTECH INDIA PVT. LTD',
                 style:fontSize15WithBold
               ),
-              Text('23, Vallabhai Road, Chokkikulam, Madurai - 625 002.',style: fontSize10),
+              Text('',style: fontSize10),
               SizedBox(height: 20),
               Text(
                 'BANK PAYMENT ADVICE',
@@ -89,7 +91,7 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                 children: [
                   //Left side
                   Container(
-                    height: 100,
+                    height: 120,
                     decoration:  BoxDecoration(
                       border: Border(
                         left: borderStyle,
@@ -116,7 +118,7 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                               Text(" : ",style: fontSize8WidthBold),
                               Column(children: [
                                 Container(width: 200,
-                                    child:  Text("Lotus Ground Floor, Anjali Appartments, No. 58-60, 3rd Cross, Thirumal Nagar,Pondicherry, PONDICHERRY - 111111 ",
+                                    child:  Text("",
                                         style: fontSize10)
                                 )
                               ])
@@ -130,7 +132,7 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                       ],
                     ),)),
                   //Right side.
-                  Container(height: 100,width: 280,
+                  Container(height: 120,width: 280,
                       decoration:  BoxDecoration(
                         border: Border(
                           top:borderStyle,
@@ -159,31 +161,31 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                         Row(children: [
                           Container(width: textWidth2,child: Text('Bank',style: fontSize8WidthBold)),
                           collenStyle,
-                          Text("INDIAN OVERSEAS BANK",style: fontSize10)
+                          Text("",style: fontSize10)
                         ]),
                         //4 th.
                         Row(children: [
                           Container(width: textWidth2,child: Text('Acc. No',style: fontSize8WidthBold)),
                           collenStyle,
-                          Text("I.O.B, CUDDALORE",style: fontSize10)
+                          Text("",style: fontSize10)
                         ]),
                         //5 th.
                         Row(children: [
                           Container(width: textWidth2,child: Text('Payment Mode',style: fontSize8WidthBold)),
                           collenStyle,
-                          Text("Cheque / RTGS / NEFT",style: fontSize10)
+                          Text("",style: fontSize10)
                         ]),
                         //6 th.
                         Row(children: [
                           Container(width: textWidth2,child: Text('Cheque No./Date',style: fontSize8WidthBold)),
                           collenStyle,
-                          Text("998254/21-05-2024",style: fontSize10)
+                          Text("",style: fontSize10)
                         ]),
                         //7 th.
                         Row(children: [
                           Container(width: textWidth2,child: Text('Charges',style: fontSize8WidthBold)),
                           collenStyle,
-                          Text("0.00",style: fontSize10)
+                          Text("",style: fontSize10)
                         ]),
                         //8 th.
                         Row(children: [
@@ -195,7 +197,7 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                         Row(children: [
                           Container(width: textWidth2,child: Text('Payment Amount',style: fontSize8WidthBold)),
                           collenStyle,
-                          Text("23,834.00",style: fontSize10)
+                          Text("${billList[0]["PaidAmount"]}",style: fontSize10)
                         ]),
                       ],
                     ),))
@@ -211,13 +213,13 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                 style: fontSize8WidthBold
               ),
               Text(
-                  '23,834.00',
+                  '${billList[0]["PaidAmount"]}',
                   style: fontSize8WidthBold
               ),
             ]),
               SizedBox(height: 20),
 
-              Table.fromTextArray(headerStyle: fontSize9WithBold,cellStyle: fontSize10,
+              TableHelper.fromTextArray(headerStyle: fontSize9WithBold,cellStyle: fontSize10,
                 headers: [
                   'Bill Number',
                   'Bill Date',
@@ -233,7 +235,7 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                     billList[i]['InvoiceDate'] != null ? formatDate(billList[i]['InvoiceDate']) : "",
                     '${billList[i]['InvoiceAmount']??""}',
                     '${billList[i]["TdsAmount"]??""}',
-                    '${billList[0]["PaidAmount"]??""}'
+                    '${billList[i]["PaidAmount"]??""}'
                   ],
 
                 ],
@@ -244,11 +246,11 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                        'In Words: Twenty Three Thousand Eight Hundred Thirty Four Only',
+                        'In Words: ${converter.convertAmountToWords(double.parse(billList[0]["PaidAmount"]), ignoreDecimal: false)}',
                         style: fontSize8WidthBold
                     ),
                     Text(
-                        '23,834.00',
+                        '${billList[0]["PaidAmount"]}',
                         style: fontSize8WidthBold
                     ),
                   ]),
@@ -258,17 +260,16 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Text('Prepared By',style: fontSize10),
-                  Text("AM",style: fontSize10),
-                  Text('DGM',style: fontSize10),
-                  Text('VP',style: fontSize10),
+                  Text("",style: fontSize10),
+                  Text('',style: fontSize10),
+                  Text('',style: fontSize10),
                 ],
               ),
               SizedBox(height: 20),
-
               Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text('MUTHAZAGAN B',style: fontSize10),
+                    Text('',style: fontSize10),
                     Text('Received the amount shown above',style: fontSize10),
                     Text('Signature',style: fontSize10),
               ]),
