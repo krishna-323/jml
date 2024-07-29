@@ -38,7 +38,13 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
   Future billDocument(String billDate)async{
     print('----------billDate-----');
     print(billDate);
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Test/ZSB_PAYINV_V5/ZPAYINV_EXPOSE_V5?filter=paymentdate eq datetime'$billDate'";
+    String addVoData = "${billDate}T00:00";
+    print(addVoData);
+
+    ///Quality URL
+   // String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Test/ZSB_PAYINV_V5/ZPAYINV_EXPOSE_V5?filter=paymentdate eq datetime'$billDate'";
+   ///PRD URL.
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/PRD/ZSB_PAYINV_V5/ZPAYINV_EXPOSE_V5?filter=paymentdate eq datetime'$addVoData'";
 
     final resData1 = await http.get(Uri.parse(url),
         headers: {
@@ -194,7 +200,7 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
     if(pickedDate != null) {
       setState(() {
         String formattedDate = DateFormat("yyyy-MM-dd").format(pickedDate);
-        billDateController.text = "${formattedDate}T00:00";
+        billDateController.text = formattedDate;
         print('--------Selected Bill Date---------');
         print(billDateController.text);
       });

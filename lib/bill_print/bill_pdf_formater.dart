@@ -8,6 +8,35 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
   // print('-----------billList-------------');
   // print(billList);
   final converter = AmountToWords();
+  String totalAmount='';
+  String convertPaisa = '';
+  String finalTotalAmount= "";
+
+  try{
+    ///Replacing - to ''.
+    totalAmount = billList[0]["TotalInvoicePaidAmount"].replaceAll('-','');
+    
+    ///Converting in To Amount In Words and also replacing Thousands To Thousand.
+    convertPaisa = converter.convertAmountToWords(double.parse(totalAmount)).replaceAll("Thousands", "Thousand");
+    
+    // print('------convertPaisa-------');
+    // print(convertPaisa);
+
+    if(convertPaisa.contains("Paise")){
+      finalTotalAmount = convertPaisa.replaceAll("Paise", "Paisa");
+      print('--------------------paisa-------------');
+      print(finalTotalAmount);
+
+    }
+    else{
+      finalTotalAmount = convertPaisa;
+    }
+  }
+  catch(e){
+    print('--------Exception---------');
+    print(e);
+  }
+
 
   ///Styles.
   // TextStyle blueGrey200 = const TextStyle(color: PdfColors.blueGrey300);
@@ -15,7 +44,7 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
 
   TextStyle fontSize9WithBold =  TextStyle(fontWeight: FontWeight.bold,fontSize: 9);
   //TextStyle fontSize9 =const TextStyle(fontSize: 9);
-  TextStyle fontSize10 =const TextStyle(fontSize: 10);
+  TextStyle fontSize9 =const TextStyle(fontSize: 9);
   TextStyle fontSize8WidthBold =TextStyle(fontWeight: FontWeight.bold,fontSize: 8,color: PdfColors.black);
 
   final pdf = Document();
@@ -50,7 +79,7 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
   //   }
   //   return formattedNumber;
   // }
-  double textWidth1 = 45;
+  double textWidth1 = 50;
   double textWidth2= 80;
   Text collenStyle =  Text(" : ",style: fontSize8WidthBold);
 
@@ -77,7 +106,7 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                 'JM FRICTECH INDIA PVT. LTD',
                 style:fontSize15WithBold
               ),
-              Text('',style: fontSize10),
+              Text('',style: fontSize9),
               SizedBox(height: 20),
               Text(
                 'BANK PAYMENT ADVICE',
@@ -90,136 +119,154 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                 //mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   //Left side
-                  Container(
-                    height: 120,
-                    decoration:  BoxDecoration(
-                      border: Border(
-                        left: borderStyle,
-                        top:borderStyle,
-                        right:borderStyle,
-                        bottom:borderStyle,
-                      ),
-                    ),
-                    child:  Padding(padding: const EdgeInsets.all(10),
-                      child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        //1 st.
-                        Row(children: [
-                          Container(width: textWidth1,child: Text('Paid To',style: fontSize8WidthBold)),
-                          Text(" : ",style: fontSize8WidthBold),
-                          Text("${billList[0]['SupplierName']??""}",style: fontSize10)
-                        ]),
-                        //2 sd.
-                        Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(width: textWidth1,child: Text('Address',style: fontSize8WidthBold)),
-                              Text(" : ",style: fontSize8WidthBold),
-                              Column(children: [
-                                Container(width: 200,
-                                    child:  Text("",
-                                        style: fontSize10)
-                                )
-                              ])
-                            ]),
-                        //3 rd.
-                        Row(children: [
-                          Container(width: textWidth1,child: Text('Naration',style: fontSize8WidthBold)),
-                          Text(" : ",style: fontSize8WidthBold),
-                          Text("",style: fontSize10)
-                        ]),
-                      ],
-                    ),)),
-                  //Right side.
-                  Container(height: 120,width: 280,
+                  Flexible(child: Container(
+                      height: 70,
                       decoration:  BoxDecoration(
                         border: Border(
+                          left: borderStyle,
                           top:borderStyle,
                           right:borderStyle,
                           bottom:borderStyle,
                         ),
                       ),
-                    child: Padding(padding: const EdgeInsets.all(10),
-                      child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        //1 st.
-                        Row(children: [
-                          Container(width: textWidth2,child: Text('Voucher No',style: fontSize8WidthBold)),
-                          collenStyle,
-                          Text("${billList[0]['AccountingDocument']??""}",style: fontSize10)
-                        ]),
+                      child:  Padding(padding: const EdgeInsets.all(6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Text("Vendor Code",style: fontSize8WidthBold),
+                            Row(children: [
+                              Container(width: textWidth1,child: Text('Vendor Code',style: fontSize8WidthBold)),
+                              Text(" : ",style: fontSize8WidthBold),
+                              Text("${billList[0]['SupplierCode']??""}",style: fontSize9)
+                            ]),
+                            SizedBox(height: 3),
+                            //1 st.
+                            Row(children: [
+                              Container(width: textWidth1,child: Text('Paid To',style: fontSize8WidthBold)),
+                              Text(" : ",style: fontSize8WidthBold),
+                              Text("${billList[0]['SupplierName']??""}",style: fontSize9)
+                            ]),
+                            ///Address and Narration.
+                            // //2 sd.
+                            // Row(
+                            //     crossAxisAlignment: CrossAxisAlignment.start,
+                            //     children: [
+                            //       Container(width: textWidth1,child: Text('Address',style: fontSize8WidthBold)),
+                            //       Text(" : ",style: fontSize8WidthBold),
+                            //       Column(children: [
+                            //         Container(width: 200,
+                            //             child:  Text("",
+                            //                 style: fontSize9)
+                            //         )
+                            //       ])
+                            //     ]),
+                            // //3 rd.
+                            // Row(children: [
+                            //   Container(width: textWidth1,child: Text('Naration',style: fontSize8WidthBold)),
+                            //   Text(" : ",style: fontSize8WidthBold),
+                            //   Text("",style: fontSize9)
+                            // ]),
+                          ],
+                        ),)),),
 
-                        //2 sd.
-                        Row(children: [
-                          Container(width: textWidth2,child: Text('Doc. Date',style: fontSize8WidthBold)),
-                          collenStyle,
-                          Text(billList[0]['paymentdate'] != null ? formatDate(billList[0]['paymentdate']) : "",style: fontSize10)
-                        ]),
-                        //3 rd.
-                        Row(children: [
-                          Container(width: textWidth2,child: Text('Bank',style: fontSize8WidthBold)),
-                          collenStyle,
-                          Text("",style: fontSize10)
-                        ]),
-                        //4 th.
-                        Row(children: [
-                          Container(width: textWidth2,child: Text('Acc. No',style: fontSize8WidthBold)),
-                          collenStyle,
-                          Text("",style: fontSize10)
-                        ]),
-                        //5 th.
-                        Row(children: [
-                          Container(width: textWidth2,child: Text('Payment Mode',style: fontSize8WidthBold)),
-                          collenStyle,
-                          Text("",style: fontSize10)
-                        ]),
-                        //6 th.
-                        Row(children: [
-                          Container(width: textWidth2,child: Text('Cheque No./Date',style: fontSize8WidthBold)),
-                          collenStyle,
-                          Text("",style: fontSize10)
-                        ]),
-                        //7 th.
-                        Row(children: [
-                          Container(width: textWidth2,child: Text('Charges',style: fontSize8WidthBold)),
-                          collenStyle,
-                          Text("",style: fontSize10)
-                        ]),
-                        //8 th.
-                        Row(children: [
-                          Container(width: textWidth2,child: Text('Currency',style: fontSize8WidthBold)),
-                          collenStyle,
-                          Text("INR",style: fontSize10)
-                        ]),
-                        //9 th
-                        Row(children: [
-                          Container(width: textWidth2,child: Text('Payment Amount',style: fontSize8WidthBold)),
-                          collenStyle,
-                          Text("${billList[0]["PaidAmount"]}",style: fontSize10)
-                        ]),
-                      ],
-                    ),))
+                  //Right side.
+                 Flexible(child:  Container(
+                     height: 70,
+                     //width: 280,
+                     decoration:  BoxDecoration(
+                       border: Border(
+                         top:borderStyle,
+                         right:borderStyle,
+                         bottom:borderStyle,
+                       ),
+                     ),
+                     child: Padding(padding: const EdgeInsets.all(6),
+                       child: Column(
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: [
+                           //1 st.
+                           Row(children: [
+                             Container(width: textWidth2,child: Text('Voucher No',style: fontSize8WidthBold)),
+                             collenStyle,
+                             Text("${billList[0]['AccountingDocument']??""}",style: fontSize9)
+                           ]),
+
+                           //2 sd.
+                           Row(children: [
+                             Container(width: textWidth2,child: Text('Doc. Date',style: fontSize8WidthBold)),
+                             collenStyle,
+                             Text(billList[0]['paymentdate'] != null ? formatDate(billList[0]['paymentdate']) : "",style: fontSize9)
+                           ]),
+                           ///Bank And Account.
+                           //3 rd.
+                           // Row(children: [
+                           //   Container(width: textWidth2,child: Text('Bank',style: fontSize8WidthBold)),
+                           //   collenStyle,
+                           //   Text("",style: fontSize9)
+                           // ]),
+                           // //4 th.
+                           // Row(children: [
+                           //   Container(width: textWidth2,child: Text('Acc. No',style: fontSize8WidthBold)),
+                           //   collenStyle,
+                           //   Text("",style: fontSize9)
+                           // ]),
+                           ///Payment Mode/ Cheque No/Date,Charges.
+                           //5 th.
+                           // Row(children: [
+                           //   Container(width: textWidth2,child: Text('Payment Mode',style: fontSize8WidthBold)),
+                           //   collenStyle,
+                           //   Text("",style: fontSize10)
+                           // ]),
+                           // //6 th.
+                           // Row(children: [
+                           //   Container(width: textWidth2,child: Text('Cheque No./Date',style: fontSize8WidthBold)),
+                           //   collenStyle,
+                           //   Text("",style: fontSize10)
+                           // ]),
+                           // //7 th.
+                           // Row(children: [
+                           //   Container(width: textWidth2,child: Text('Charges',style: fontSize8WidthBold)),
+                           //   collenStyle,
+                           //   Text("",style: fontSize10)
+                           // ]),
+                           //8 th.
+                           Row(children: [
+                             Container(width: textWidth2,child: Text('Currency',style: fontSize8WidthBold)),
+                             collenStyle,
+                             Text("INR",style: fontSize9)
+                           ]),
+                           //9 th
+                           Row(children: [
+                             Container(width: textWidth2,child: Text('Payment Amount',style: fontSize8WidthBold)),
+                             collenStyle,
+                             Text(totalAmount,style: fontSize9)
+                           ]),
+                         ],
+                       ),)))
                 ],
               ),
               SizedBox(height: 20),
+            ///SupplierName and Amount.
+            //   Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //   Text(
+            //     '${billList[0]['SupplierName']??""}',
+            //     style: fontSize8WidthBold
+            //   ),
+            //   Text(
+            //       totalAmount,
+            //       style: fontSize8WidthBold
+            //   ),
+            // ]),
+            //   SizedBox(height: 20),
+              ///Table Code.
+              TableHelper.fromTextArray(
+                //This is for Header.
+                headerStyle: fontSize9WithBold,
+                //This Is for Table.
+                cellStyle: fontSize9,
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-              Text(
-                '${billList[0]['SupplierName']??""}',
-                style: fontSize8WidthBold
-              ),
-              Text(
-                  '${billList[0]["PaidAmount"]}',
-                  style: fontSize8WidthBold
-              ),
-            ]),
-              SizedBox(height: 20),
-
-              TableHelper.fromTextArray(headerStyle: fontSize9WithBold,cellStyle: fontSize10,
                 headers: [
                   'Bill Number',
                   'Bill Date',
@@ -227,53 +274,75 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                   'TDS Amount',
                   'Pay Amount'
                 ],
+
+                ///Not working Train and Error Method.
+                //cellAlignment: const Alignment(10, 0),
+
+
                 data:
                 [
                   for(int i=0;i<billList.length;i++)
+                    [
+                      ///SupplierInvoice and JENumber.
+                      //(billList[i]['SupplierInvoice']!="" || billList[i]['SupplierInvoice']!='null')?billList[i]['SupplierInvoice']:billList[i]['JENumber'],
 
-                  ['${billList[i]['JENumber']??""}',
-                    billList[i]['InvoiceDate'] != null ? formatDate(billList[i]['InvoiceDate']) : "",
-                    '${billList[i]['InvoiceAmount']??""}',
-                    '${billList[i]["TdsAmount"]??""}',
-                    '${billList[i]["PaidAmount"]??""}'
-                  ],
-
+                      '${billList[i]['InvoiceReference']??""}',
+                      billList[i]['InvoiceDate'] != null ? formatDate(billList[i]['InvoiceDate']) : "",
+                      '${billList[i]['InvoiceAmount']??""}',
+                      '${billList[i]["TdsAmount"]??""}',
+                      '${billList[i]["PaidAmount"]??""}'
+                    ],
                 ],
+                cellAlignments: {
+                  0: Alignment.centerLeft,
+                  1: Alignment.centerLeft,
+                  2: Alignment.centerRight,
+                  3: Alignment.centerRight,
+                  4: Alignment.centerRight,
+                },
               ),
+
               SizedBox(height: 20),
               //Amount In Words.
               Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                  Builder(builder: (context) {
+                    return
+                      Text(
+                        'In Words: $finalTotalAmount',
+                        style: fontSize8WidthBold
+                    );
+                  },),
                     Text(
-                        'In Words: ${converter.convertAmountToWords(double.parse(billList[0]["PaidAmount"]), ignoreDecimal: false)}',
+                      '',
+                       // totalAmount,
                         style: fontSize8WidthBold
                     ),
-                    Text(
-                        '${billList[0]["PaidAmount"]}',
-                        style: fontSize8WidthBold
-                    ),
+
                   ]),
               SizedBox(height: 20),
               //Prepared By.
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Text('Prepared By',style: fontSize10),
-                  Text("",style: fontSize10),
-                  Text('',style: fontSize10),
-                  Text('',style: fontSize10),
-                ],
-              ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              //   children: [
+              //     Text('Prepared By',style: fontSize10),
+              //     Text("",style: fontSize10),
+              //     Text('',style: fontSize10),
+              //     Text('',style: fontSize10),
+              //   ],
+              // ),
+
               SizedBox(height: 20),
               Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text('',style: fontSize10),
-                    Text('Received the amount shown above',style: fontSize10),
-                    Text('Signature',style: fontSize10),
+                    Text('',style: fontSize9),
+                    Text('Received the amount shown above',style: fontSize9),
+                    Text('Signature',style: fontSize9),
               ]),
-
+              SizedBox(height: 20),
+              Text("This is a computer generated advice, does not need signature.",style: fontSize9WithBold),
             ],),
         )
       ],
@@ -286,6 +355,9 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
   // Return PDF as bytes.
   return pdf.save();
 }
+
+
+
 
 
 
