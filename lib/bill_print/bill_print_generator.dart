@@ -28,6 +28,8 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
   final _validate = GlobalKey<FormState>();
   List responseData1=[];
   bool loading=false;
+  int fileCount = 0;
+  int totalCount = 0;
   @override
   initState(){
     super.initState();
@@ -56,7 +58,11 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
 
         if(resData1.statusCode==200){
           responseData1 = movementType['d']['results'];
-
+          setState(() {
+            totalCount = responseData1.length;
+            print('-------totalCount------');
+            print(totalCount);
+          });
           Map groupedData = groupBy(responseData1, (item) {
             // print('------item--------');
             // print(item);
@@ -64,7 +70,12 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
           });
           // print('+++++++++++++++++++++++++++++++++++++++++++++++++');
           // print(jsonEncode(groupedData));
-          billPDFGenerator(groupedData);
+          billPDFGenerator(groupedData).whenComplete(() {
+            setState(() {
+              loading = false;
+              billDateController.clear();
+            });
+          });
 
           if(responseData1.isEmpty){
             if(mounted){
@@ -86,10 +97,7 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
           }
         }
 
-        setState(() {
-          loading = false;
-          billDateController.clear();
-        });
+
 
     }
 
@@ -144,21 +152,39 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
                       if(_validate.currentState!.validate()){
                         setState(() {
                           loading =true;
+                          //API Call.
+                          billDocument(billDateController.text);
                         });
-                        //API Call.
-                        billDocument(billDateController.text);
+
                       }
 
                     }),
                 const SizedBox(width: 20,),
-                loading? const Row(children: [
-                  SizedBox(
-                      width: 30,
-                      height: 30,
-                      child: CircularProgressIndicator()),
-                  SizedBox(width: 5,),
-                  Text("Loading Please Wait.."),
-                ],):const Text(""),
+                if(loading)...{
+                const   Row(children: [
+                    SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: CircularProgressIndicator()),
+                    SizedBox(width: 5,),
+                    Text("Loading Please Wait.."),
+                  ],),
+                }
+                else...{
+                 const Text(""),
+                },
+                const SizedBox(width: 15,),
+                if(fileCount > 0)...{
+                  Builder(
+                      builder: (context) {
+                        return Text("$fileCount Of $totalCount");
+                      }
+                  ),
+                }
+                else...{
+                  const Text("")
+                }
+
               ],
             ),
           ]),
@@ -212,8 +238,14 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
 
   Future<void> billPDFGenerator(Map dividedMap) async {
     try {
+      // print('---------dividedMap---------');
+      // print(dividedMap);
       for (var key in dividedMap.keys) {
+
         List billList = dividedMap[key]!;
+        // print('------------check----------');
+        // print(billList);
+        // print(billList.length);
         Uint8List pdfBytes = await generateBillPDF(billList);
 
 
@@ -240,7 +272,14 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
         // Clean up resources.
         html.Url.revokeObjectUrl(url);
         anchor.remove();
+        await Future.delayed(const Duration(seconds: 1));
+       setState(() {
+         fileCount++;
+         // print('-----------fileCount-----');
+         // print(fileCount);
+       });
       }
+
     } catch (e) {
       print("--------Exception While Generating PDF-------");
       print(e);
