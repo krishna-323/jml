@@ -43,11 +43,10 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
     String addVoData = "${billDate}T00:00";
     print(addVoData);
 
-    ///Quality URL
+    ///Quality URL For PDFs.
    // String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/Test/ZSB_PAYINV_V5/ZPAYINV_EXPOSE_V5?filter=paymentdate eq datetime'$billDate'";
-   ///PRD URL.
-    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/PRD/ZSB_PAYINV_V5/ZPAYINV_EXPOSE_V5?filter=paymentdate eq datetime'$addVoData'";
-
+   ///PRD URL For PDFs.
+    String url = "Https://JMIApp-terrific-eland-ao.cfapps.in30.hana.ondemand.com/api/sap_odata_get/PRD/ZSB_PAYINV_V5/ZPAYINV_EXPOSE_V5?filter=paymentdate eq datetime'$addVoData'&top=10000";
     final resData1 = await http.get(Uri.parse(url),
         headers: {
           "Authorization":StaticData.basicAuth
@@ -59,11 +58,13 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
         if(resData1.statusCode==200){
           responseData1 = movementType['d']['results'];
           setState(() {
-            totalCount = responseData1.length;
-            print('-------totalCount------');
-            print(totalCount);
+            ///TO Get Total Responses.
+            //totalCount = responseData1.length;
+            // print('-------totalCount------');
+            // print(totalCount);
           });
           Map groupedData = groupBy(responseData1, (item) {
+
             // print('------item--------');
             // print(item);
             return item['AccountingDocument'];
@@ -174,6 +175,7 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
                  const Text(""),
                 },
                 const SizedBox(width: 15,),
+
                 if(fileCount > 0)...{
                   Builder(
                       builder: (context) {
@@ -237,9 +239,11 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
 
 
   Future<void> billPDFGenerator(Map dividedMap) async {
+    String keyStore = "";
     try {
       // print('---------dividedMap---------');
       // print(dividedMap);
+
       for (var key in dividedMap.keys) {
 
         List billList = dividedMap[key]!;
@@ -277,12 +281,19 @@ class _BillPrintScreenState extends State<BillPrintScreen> {
          fileCount++;
          // print('-----------fileCount-----');
          // print(fileCount);
+
+         keyStore = key;
+         totalCount = dividedMap.keys.length;
+         print('--------totalCount--------');
+         print(totalCount);
        });
       }
 
     } catch (e) {
       print("--------Exception While Generating PDF-------");
       print(e);
+      print('---------AccountingDocument----------');
+      print(keyStore);
     }
   }
 

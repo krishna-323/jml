@@ -24,8 +24,8 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
 
     if(convertPaisa.contains("Paise")){
       finalTotalAmount = convertPaisa.replaceAll("Paise", "Paisa");
-      print('--------------------paisa-------------');
-      print(finalTotalAmount);
+      // print('--------------------paisa-------------');
+      // print(finalTotalAmount);
 
     }
     else{
@@ -260,47 +260,127 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
             //   ),
             // ]),
             //   SizedBox(height: 20),
-              ///Table Code.
-              TableHelper.fromTextArray(
-                //This is for Header.
-                headerStyle: fontSize9WithBold,
-                //This Is for Table.
-                cellStyle: fontSize9,
+              ///Table Code.(old).
+              // TableHelper.fromTextArray(
+              //   //This is for Header.
+              //   headerStyle: fontSize9WithBold,
+              //   //This Is for Table.
+              //   cellStyle: fontSize9,
+              //
+              //   headers: [
+              //     'Bill Number',
+              //     'Bill Date',
+              //     'Bill Amount',
+              //     'TDS Amount',
+              //     'Pay Amount'
+              //   ],
+              //
+              //   ///Not working Train and Error Method.
+              //   //cellAlignment: const Alignment(10, 0),
+              //
+              //
+              //   data:
+              //   [
+              //     for(int i=0;i<billList.length;i++)
+              //       [
+              //         ///SupplierInvoice and JENumber.
+              //         //(billList[i]['SupplierInvoice']!="" || billList[i]['SupplierInvoice']!='null')?billList[i]['SupplierInvoice']:billList[i]['JENumber'],
+              //
+              //         '${billList[i]['InvoiceReference']??""}',
+              //         billList[i]['InvoiceDate'] != null ? formatDate(billList[i]['InvoiceDate']) : "",
+              //         '${billList[i]['InvoiceAmount']??""}',
+              //         '${billList[i]["TdsAmount"]??""}',
+              //         '${billList[i]["PaidAmount"]??""}'
+              //       ],
+              //   ],
+              //   cellAlignments: {
+              //     0: Alignment.centerLeft,
+              //     1: Alignment.centerLeft,
+              //     2: Alignment.centerRight,
+              //     3: Alignment.centerRight,
+              //     4: Alignment.centerRight,
+              //   },
+              // ),
 
-                headers: [
-                  'Bill Number',
-                  'Bill Date',
-                  'Bill Amount',
-                  'TDS Amount',
-                  'Pay Amount'
-                ],
+              ///Table Header.
+              Container(height: 25,
+                  decoration:  BoxDecoration(
+                    ///color
+                   // color: PdfColors.grey,
+                    border: Border(
+                       top:borderStyle,
+                      bottom:borderStyle,
+                      right: borderStyle,
+                      left: borderStyle
+                    ),
+                  ),
+                  child: Row(children: [
 
-                ///Not working Train and Error Method.
-                //cellAlignment: const Alignment(10, 0),
+                    Expanded(flex: 1,child: Padding(padding: const EdgeInsets.only(left: 5),
+                        child: Text('Bill Number',style: fontSize9WithBold)
+                    )),
+                    Container(height: 25,width: 0.5,color: PdfColors.black),
+                    Expanded(flex: 1,child: Padding(padding: const EdgeInsets.only(left: 5),
+                        child: Text('Bill Date',style: fontSize9WithBold)
+                    )),
+                    Container(height: 25,width: 0.5,color: PdfColors.black),
+                    Expanded(flex: 1,child: Padding(padding: const EdgeInsets.only(left: 5,right: 5),
+                        child: Align(alignment: Alignment.centerRight,
+                            child: Text('Bill Amount',style: fontSize9WithBold))
+                    )),
+                    Container(height: 25,width: 0.5,color: PdfColors.black),
+                    Expanded(flex: 1,
+                        child:Padding(padding: const EdgeInsets.only(left: 5,right: 5),
+                        child:  Align(alignment: Alignment.centerRight,
+                            child: Text('TDS Amount',style: fontSize9WithBold))
+                    )),
 
-
-                data:
-                [
-                  for(int i=0;i<billList.length;i++)
-                    [
-                      ///SupplierInvoice and JENumber.
-                      //(billList[i]['SupplierInvoice']!="" || billList[i]['SupplierInvoice']!='null')?billList[i]['SupplierInvoice']:billList[i]['JENumber'],
-
-                      '${billList[i]['InvoiceReference']??""}',
-                      billList[i]['InvoiceDate'] != null ? formatDate(billList[i]['InvoiceDate']) : "",
-                      '${billList[i]['InvoiceAmount']??""}',
-                      '${billList[i]["TdsAmount"]??""}',
-                      '${billList[i]["PaidAmount"]??""}'
-                    ],
-                ],
-                cellAlignments: {
-                  0: Alignment.centerLeft,
-                  1: Alignment.centerLeft,
-                  2: Alignment.centerRight,
-                  3: Alignment.centerRight,
-                  4: Alignment.centerRight,
-                },
+                  ])
               ),
+              ///Dynamic Table
+              for(int i=0;i<billList.length;i++)
+              //Eight Dynamic Header.
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Column(
+                        children: [
+                          Container(height: 25,
+                              decoration:  BoxDecoration(
+                                border: Border(
+                                   //top:borderStyle,
+                                  bottom:borderStyle,
+                                  left:borderStyle,
+                                  right:borderStyle,
+                                ),
+                              ),
+                              child: Row(children: [
+                                Expanded(flex: 1,child: Padding(padding: const EdgeInsets.only(left: 5),
+                                    child: Text('${billList[i]['InvoiceReference']??""}',style: fontSize9)
+                                )),
+                                Container(height: 25,width: 0.5,color: PdfColors.black),
+                                Expanded(flex: 1,child: Padding(padding:const EdgeInsets.only(left: 5),
+                                    child: Text(billList[i]['InvoiceDate'] != null ? formatDate(billList[i]['InvoiceDate']) : "",style: fontSize9)
+                                  //Text('NB26061-LEVER-1 NOS',style: fontSize8)
+                                )),
+                                Container(height: 25,width: 0.5,color: PdfColors.black),
+                                Expanded(flex: 1,child: Padding(padding: const EdgeInsets.only(left: 5,right: 5),
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text("${billList[i]['InvoiceAmount']??""}",style: fontSize9),)
+                                  //Text('90.24.1000',style: fontSize8)
+                                )),
+                                Container(height: 25,width: 0.5,color: PdfColors.black),
+                                Expanded(flex: 1,child: Padding(padding:const EdgeInsets.only(left: 5,right: 5),
+                                    child: Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Text('${billList[i]["PaidAmount"]??""}',style: fontSize9))
+                                  //Text('NOS',style: fontSize8)
+                                )),
+                              ])
+                          ),
+                        ]
+                    );
+                  },),
 
               SizedBox(height: 20),
               //Amount In Words.
@@ -322,7 +402,8 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
 
                   ]),
               SizedBox(height: 20),
-              //Prepared By.
+
+              ///Prepared By.
               // Row(
               //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               //   children: [
