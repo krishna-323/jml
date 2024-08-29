@@ -92,7 +92,7 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
         Container(
             width: 1000,
             //height: 800,
-            decoration:  BoxDecoration(
+            decoration:  const BoxDecoration(
               border: Border(
                 // left: borderStyle,
                 // top:borderStyle,
@@ -334,7 +334,11 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                         child:  Align(alignment: Alignment.centerRight,
                             child: Text('TDS Amount',style: fontSize9WithBold))
                     )),
-
+                    Container(height: 25,width: 0.5,color: PdfColors.black),
+                    Expanded(flex: 1,child: Padding(padding: const EdgeInsets.only(left: 5,right: 5),
+                        child: Align(alignment: Alignment.centerRight,
+                            child: Text('Pay Amount',style: fontSize9WithBold))
+                    )),
                   ])
               ),
               ///Dynamic Table
@@ -373,9 +377,17 @@ Future<Uint8List> generateBillPDF(List<dynamic> billList) async {
                                 Expanded(flex: 1,child: Padding(padding:const EdgeInsets.only(left: 5,right: 5),
                                     child: Align(
                                         alignment: Alignment.centerRight,
+                                        child: Text('${billList[i]["TdsAmount"]??""}',style: fontSize9))
+                                  //Text('NOS',style: fontSize8)
+                                )),
+                                Container(height: 25,width: 0.5,color: PdfColors.black),
+                                Expanded(flex: 1,child: Padding(padding:const EdgeInsets.only(left: 5,right: 5),
+                                    child: Align(
+                                        alignment: Alignment.centerRight,
                                         child: Text('${billList[i]["PaidAmount"]??""}',style: fontSize9))
                                   //Text('NOS',style: fontSize8)
                                 )),
+
                               ])
                           ),
                         ]
